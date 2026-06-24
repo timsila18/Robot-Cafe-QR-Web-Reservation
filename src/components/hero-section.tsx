@@ -21,9 +21,9 @@ export function HeroSection({
 }: HeroSectionProps) {
   return (
     <section className="relative mx-auto grid min-h-[72svh] w-full max-w-7xl items-center gap-12 px-5 py-12 sm:px-8 lg:grid-cols-[1fr_0.82fr]">
-      <div className="absolute inset-x-8 top-24 h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
+      <div className="absolute inset-x-8 top-24 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
       <div className="relative z-10 max-w-3xl">
-        <h1 className="text-5xl font-semibold leading-[0.95] text-slate-950 sm:text-7xl lg:text-8xl">{title}</h1>
+        <h1 className="premium-text-gradient text-5xl font-semibold leading-[0.95] sm:text-7xl lg:text-8xl">{title}</h1>
         <p className="mt-6 text-2xl font-medium text-gold sm:text-4xl">{subtitle}</p>
         <p className="mt-6 max-w-2xl text-base leading-8 text-slate-600 sm:text-lg">{description}</p>
         <div className="mt-9 flex flex-col gap-3 sm:flex-row">

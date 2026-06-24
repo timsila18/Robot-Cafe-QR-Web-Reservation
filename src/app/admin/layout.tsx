@@ -6,7 +6,7 @@ export default async function AdminRouteLayout({ children }: { children: React.R
   const pathname = headerStore.get("x-pathname");
 
   if (pathname === "/admin/login") {
-    return <main className="luxury-bg min-h-screen px-5 py-10 text-slate-900 sm:px-8">{children}</main>;
+    return <main className="premium-shell min-h-screen px-5 py-10 text-slate-900 sm:px-8">{children}</main>;
   }
 
   return <AdminLayout>{children}</AdminLayout>;

@@ -22,7 +22,7 @@ export function AdminDashboard() {
   return (
     <div className="space-y-8">
       <section>
-        <h2 className="text-3xl font-semibold text-slate-950">Executive Dashboard</h2>
+        <h2 className="premium-text-gradient text-4xl font-semibold">Executive Dashboard</h2>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500">
           A premium operations foundation for branch menus, digital dining intelligence, and future service modules.
         </p>
@@ -30,7 +30,7 @@ export function AdminDashboard() {
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {metrics.map(([label, value, helper]) => (
-          <article className="luxury-panel p-5" key={label}>
+          <article className="luxury-panel overflow-hidden p-5 transition hover:-translate-y-1 hover:shadow-[0_28px_70px_rgba(8,119,189,.16)]" key={label}>
             <p className="text-xs uppercase tracking-[0.24em] text-slate-400">{label}</p>
             <p className="mt-4 text-4xl font-semibold text-slate-950">{value}</p>
             <p className="mt-3 text-sm text-slate-500">{helper}</p>

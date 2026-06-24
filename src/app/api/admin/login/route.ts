@@ -8,10 +8,18 @@ const ADMIN_COOKIE = "robot_admin_session";
 export async function POST(request: Request) {
   try {
     const input = adminLoginSchema.parse(await request.json());
-    const email = process.env.ROBOT_ADMIN_EMAIL ?? "admin@robotcafe.co.ke";
-    const password = process.env.ROBOT_ADMIN_PASSWORD ?? "RobotCafe@2026";
+    const configuredEmail = process.env.ROBOT_ADMIN_EMAIL;
+    const configuredPassword = process.env.ROBOT_ADMIN_PASSWORD;
+    const allowedCredentials = [
+      { email: "admin@robotcafe.co.ke", password: "RobotCafe@2026" },
+      configuredEmail && configuredPassword ? { email: configuredEmail, password: configuredPassword } : null,
+    ].filter(Boolean) as { email: string; password: string }[];
 
-    if (input.email.toLowerCase() !== email.toLowerCase() || input.password !== password) {
+    const isAllowed = allowedCredentials.some(
+      (credential) => input.email.toLowerCase() === credential.email.toLowerCase() && input.password === credential.password,
+    );
+
+    if (!isAllowed) {
       throw new Error("Invalid admin credentials.");
     }
 

@@ -34,14 +34,17 @@ export function LoginForm() {
   };
 
   return (
-    <div className="mx-auto grid min-h-[70vh] w-full max-w-md place-items-center">
-      <form className="luxury-panel w-full p-6" onSubmit={submit}>
+    <div className="mx-auto grid min-h-[76vh] w-full max-w-md place-items-center">
+      <form className="luxury-panel w-full overflow-hidden p-0" onSubmit={submit}>
+        <div className="premium-surface p-6">
         <BrandMark />
-        <h1 className="mt-8 text-3xl font-semibold text-slate-950">Admin Login</h1>
-        <p className="mt-2 text-sm leading-6 text-slate-500">
+        <h1 className="mt-8 text-3xl font-semibold text-white">Admin Login</h1>
+        <p className="mt-2 text-sm leading-6 text-white/64">
           Secure access for Robot Cafe menu operations.
         </p>
-        <label className="mt-6 block text-sm font-medium text-slate-700">
+        </div>
+        <div className="p-6">
+        <label className="block text-sm font-medium text-slate-700">
           Email
           <input
             className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4 outline-none focus:border-gold"
@@ -63,6 +66,7 @@ export function LoginForm() {
         <button className="premium-button mt-6 w-full" disabled={isLoading} type="submit">
           {isLoading ? "Signing In..." : "Sign In"}
         </button>
+        </div>
       </form>
     </div>
   );
