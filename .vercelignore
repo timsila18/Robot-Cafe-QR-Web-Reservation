@@ -1,0 +1,4 @@
+.next/cache
+node_modules
+*.png
+!public/robot-cafe-logo.png
