@@ -25,7 +25,7 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), "Trebuchet MS", Arial, Helvetica, sans-serif;
   overflow-x: hidden;
 }
 
@@ -46,6 +46,13 @@ body {
     radial-gradient(circle at 50% 96%, rgba(216, 169, 40, 0.12), transparent 30rem),
     linear-gradient(180deg, #ffffff 0%, #eef6fb 45%, #e7f2f8 100%);
   background-size: 24px 24px, auto, auto, auto, auto;
+}
+
+.robot-site-bg {
+  background:
+    radial-gradient(circle at 16% 42%, rgba(8, 119, 189, .38), transparent 26rem),
+    radial-gradient(circle at 76% 38%, rgba(216, 169, 40, .13), transparent 24rem),
+    linear-gradient(115deg, #03111e 0%, #061827 42%, #0a0d0c 100%);
 }
 
 .luxury-panel {
@@ -72,9 +79,9 @@ body {
 
 .premium-shell {
   background:
-    radial-gradient(circle at 10% 8%, rgba(18, 149, 223, .22), transparent 28rem),
+    radial-gradient(circle at 10% 8%, rgba(22, 141, 242, .25), transparent 28rem),
     radial-gradient(circle at 90% 0%, rgba(0, 176, 80, .13), transparent 24rem),
-    linear-gradient(180deg, #071827 0%, #0b2235 42%, #eef6fb 42%, #eef6fb 100%);
+    linear-gradient(180deg, #020912 0%, #071827 44%, #eef6fb 44%, #eef6fb 100%);
 }
 
 .premium-surface {
