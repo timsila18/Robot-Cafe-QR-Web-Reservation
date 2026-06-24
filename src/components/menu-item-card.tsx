@@ -14,8 +14,8 @@ export function MenuItemCard({ item, onViewDetails }: MenuItemCardProps) {
   const imageUrl = getOptimizedImageUrl(primaryImage, "card");
 
   return (
-    <article className="group luxury-panel w-full min-w-0 max-w-full overflow-hidden transition duration-300 hover:-translate-y-1 hover:border-gold/35 hover:shadow-[0_30px_80px_rgba(8,119,189,.18)]">
-      <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
+    <article className="group w-full min-w-0 max-w-full overflow-hidden rounded-[22px] border border-white/10 bg-[linear-gradient(145deg,rgba(7,24,39,.92),rgba(8,55,86,.74))] shadow-[0_24px_70px_rgba(0,0,0,.26)] transition duration-300 hover:-translate-y-1 hover:border-[#168df2]/50 hover:shadow-[0_30px_80px_rgba(8,119,189,.22)]">
+      <div className="relative aspect-[4/3] overflow-hidden bg-[#071827]">
         <Image
           alt={imageAlt(item.name)}
           blurDataURL={robotCafeImageFallback}
@@ -38,16 +38,16 @@ export function MenuItemCard({ item, onViewDetails }: MenuItemCardProps) {
         </div>
       </div>
 
-      <div className="bg-white/90 p-5">
+      <div className="p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
           <div className="min-w-0">
-            <p className="text-xs uppercase tracking-[0.24em] text-slate-400">{category?.name}</p>
-            <h3 className="mt-2 text-xl font-semibold text-slate-950">{item.name}</h3>
+            <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#6dc6ff]">{category?.name}</p>
+            <h3 className="mt-2 text-xl font-black text-white">{item.name}</h3>
           </div>
-          <p className="shrink-0 text-lg font-semibold text-gold">{formatPrice(item.price)}</p>
+          <p className="shrink-0 text-lg font-black text-[#6dc6ff]">{formatPrice(item.price)}</p>
         </div>
-        <p className="mt-3 line-clamp-2 min-h-12 text-sm leading-6 text-slate-500">{item.description}</p>
-        <div className="mt-4 flex items-center justify-between rounded-xl border border-gold/10 bg-gradient-to-r from-sky-50 to-emerald-50 px-3 py-2 text-xs font-semibold text-slate-600">
+        <p className="mt-3 line-clamp-2 min-h-12 text-sm font-medium leading-6 text-[#d7e7f8]">{item.description}</p>
+        <div className="mt-4 flex items-center justify-between rounded-xl border border-white/10 bg-white/8 px-3 py-2 text-xs font-bold text-[#d7e7f8]">
           <span>{item.preparationTime} min prep</span>
           <span>{item.calories} cal</span>
         </div>

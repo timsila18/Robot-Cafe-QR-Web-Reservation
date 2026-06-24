@@ -12,7 +12,7 @@ export function SearchBar({ value, onChange, onBlur, suggestions = [], onSuggest
       <label className="block w-full">
         <span className="sr-only">Search menu</span>
         <input
-          className="h-14 w-full min-w-0 max-w-full rounded-xl border border-slate-200 bg-white px-4 text-base text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-gold/60 focus:bg-white"
+          className="h-14 w-full min-w-0 max-w-full rounded-xl border border-white/10 bg-white px-4 text-base font-semibold text-[#071827] outline-none transition placeholder:text-slate-500 focus:border-[#168df2] focus:bg-white"
           placeholder="Search dishes, categories, descriptions, ingredients"
           type="search"
           value={value}
@@ -29,7 +29,7 @@ export function SearchBar({ value, onChange, onBlur, suggestions = [], onSuggest
         <div className="mt-3 flex flex-wrap gap-2" aria-label="Search suggestions">
           {suggestions.map((suggestion) => (
             <button
-              className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-gold/30 hover:text-gold"
+              className="rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-xs font-bold text-[#d7e7f8] transition hover:border-[#168df2]/50 hover:bg-[#168df2]/18 hover:text-white"
               key={suggestion}
               type="button"
               onMouseDown={(event) => event.preventDefault()}

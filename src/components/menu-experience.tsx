@@ -130,18 +130,18 @@ export function MenuExperience({ branch, categories, items }: MenuExperienceProp
       <section className="mx-auto w-full max-w-7xl overflow-hidden px-5 pb-20 pt-8 sm:px-8">
         <div className="grid min-w-0 gap-6 lg:grid-cols-[0.82fr_1.18fr] lg:items-end">
           <div className="min-w-0 max-w-full">
-            <p className="text-sm uppercase tracking-[0.28em] text-gold">ROBOT CAFE</p>
-            <h1 className="mt-4 text-4xl font-semibold text-slate-950 sm:text-6xl">{branch.name.replace("Robot Cafe - ", "")}</h1>
-            <p className="mt-4 max-w-2xl break-words text-base leading-7 text-slate-600">
+            <p className="text-sm font-bold uppercase tracking-[0.28em] text-[#6dc6ff]">ROBOT CAFE</p>
+            <h1 className="mt-4 text-4xl font-black text-white sm:text-6xl">{branch.name.replace("Robot Cafe - ", "")}</h1>
+            <p className="mt-4 max-w-2xl break-words text-base font-medium leading-7 text-[#d7e7f8]">
               Browse the live branch menu with instant search, refined categories, and premium dish details.
             </p>
           </div>
-          <div className="luxury-panel w-[calc(100vw-2.5rem)] min-w-0 max-w-full p-4 sm:w-full">
+          <div className="w-[calc(100vw-2.5rem)] min-w-0 max-w-full rounded-[22px] border border-white/10 bg-white/10 p-4 shadow-[0_20px_70px_rgba(0,0,0,.22)] backdrop-blur-xl sm:w-full">
             <SearchBar value={query} onBlur={() => commitSearch(query)} onChange={setSearch} suggestions={suggestions} onSuggestion={(value) => { setSearch(value); commitSearch(value); }} />
             {recentSearches.length ? (
               <div className="mt-3 flex flex-wrap gap-2">
                 {recentSearches.map((entry) => (
-                  <button className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500 transition hover:bg-gold/10 hover:text-gold" key={entry} type="button" onClick={() => setSearch(entry)}>
+                  <button className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs font-bold text-[#d7e7f8] transition hover:bg-[#168df2]/18 hover:text-white" key={entry} type="button" onClick={() => setSearch(entry)}>
                     {entry}
                   </button>
                 ))}
@@ -150,7 +150,7 @@ export function MenuExperience({ branch, categories, items }: MenuExperienceProp
           </div>
         </div>
 
-        <div className="sticky top-20 z-30 mt-8 w-[calc(100vw-2.5rem)] min-w-0 max-w-full rounded-2xl border border-slate-200 bg-white/90 px-3 backdrop-blur-xl sm:w-full">
+        <div className="sticky top-20 z-30 mt-8 w-[calc(100vw-2.5rem)] min-w-0 max-w-full rounded-2xl border border-white/10 bg-[#04101c]/88 px-3 shadow-[0_16px_45px_rgba(0,0,0,.24)] backdrop-blur-xl sm:w-full">
           <CategoryFilter categories={categories} selectedCategory={selectedCategory} onSelect={handleCategory} />
         </div>
 
@@ -160,10 +160,10 @@ export function MenuExperience({ branch, categories, items }: MenuExperienceProp
               <section key={label}>
                 <div className="mb-5 flex items-end justify-between gap-4">
                   <div>
-                    <h2 className="text-2xl font-semibold text-slate-950">{label}</h2>
-                    <p className="mt-1 text-sm text-slate-500">{sectionItems.length} premium selections curated for this branch.</p>
+                    <h2 className="text-2xl font-black text-white">{label}</h2>
+                    <p className="mt-1 text-sm font-medium text-[#d7e7f8]">{sectionItems.length} premium selections curated for this branch.</p>
                   </div>
-                  <Link className="hidden text-sm font-semibold text-gold sm:block" href="/feedback">Share feedback</Link>
+                  <Link className="hidden text-sm font-bold text-[#6dc6ff] sm:block" href="/feedback">Share feedback</Link>
                 </div>
                 <MenuGrid items={sectionItems} onViewDetails={(item) => { track({ itemId: item.id, categoryId: item.categoryId }); setSelectedItem(item); }} />
               </section>
@@ -174,8 +174,8 @@ export function MenuExperience({ branch, categories, items }: MenuExperienceProp
         <div className="mt-10">
           <div className="mb-5 flex items-center justify-between gap-4">
             <div>
-              <h2 className="text-2xl font-semibold text-slate-950">Featured Discovery</h2>
-              <p className="mt-1 text-sm text-slate-500">{filteredItems.length} curated items available for this view.</p>
+              <h2 className="text-2xl font-black text-white">Featured Discovery</h2>
+              <p className="mt-1 text-sm font-medium text-[#d7e7f8]">{filteredItems.length} curated items available for this view.</p>
             </div>
           </div>
           <div className="w-[calc(100vw-2.5rem)] min-w-0 max-w-full sm:w-full">
@@ -190,8 +190,8 @@ export function MenuExperience({ branch, categories, items }: MenuExperienceProp
             return (
               <section id={`category-${category.id}`} key={category.id} ref={(element) => { categoryRefs.current[category.id] = element; }} className="scroll-mt-40">
                 <div className="mb-5">
-                  <h2 className="text-2xl font-semibold text-slate-950">{category.name}</h2>
-                  <p className="mt-1 text-sm text-slate-500">{categoryItems.length} branch-ready selections.</p>
+                  <h2 className="text-2xl font-black text-white">{category.name}</h2>
+                  <p className="mt-1 text-sm font-medium text-[#d7e7f8]">{categoryItems.length} branch-ready selections.</p>
                 </div>
                 <MenuGrid items={categoryItems} onViewDetails={(item) => { track({ itemId: item.id, categoryId: item.categoryId }); setSelectedItem(item); }} />
               </section>
@@ -199,10 +199,10 @@ export function MenuExperience({ branch, categories, items }: MenuExperienceProp
           })}
         </div>
 
-        <div className="mt-12 luxury-panel flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-12 flex flex-col gap-4 rounded-[22px] border border-white/10 bg-white/10 p-5 shadow-[0_20px_70px_rgba(0,0,0,.22)] backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-xl font-semibold text-slate-950">How was your Robot Cafe experience?</h2>
-            <p className="mt-1 text-sm text-slate-500">Share a quick signal with the team after browsing or dining.</p>
+            <h2 className="text-xl font-black text-white">How was your Robot Cafe experience?</h2>
+            <p className="mt-1 text-sm font-medium text-[#d7e7f8]">Share a quick signal with the team after browsing or dining.</p>
           </div>
           <Link className="premium-button" href={`/feedback?branch=${branch.slug}`}>Give Feedback</Link>
         </div>
