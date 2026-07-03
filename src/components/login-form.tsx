@@ -1,11 +1,10 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { BrandMark } from "@/components/brand-mark";
 
 export function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("admin@robotcafe.co.ke");
   const [password, setPassword] = useState("RobotCafe@2026");
@@ -29,8 +28,9 @@ export function LoginForm() {
       return;
     }
 
-    router.replace(searchParams.get("next") ?? payload.data.redirectTo ?? "/admin");
-    router.refresh();
+    const secure = window.location.protocol === "https:" ? "; secure" : "";
+    document.cookie = `robot_admin_session=active; path=/; max-age=${60 * 60 * 8}; samesite=lax${secure}`;
+    window.location.assign(searchParams.get("next") ?? payload.data.redirectTo ?? "/admin");
   };
 
   return (
