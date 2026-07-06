@@ -1,10 +1,11 @@
 import { branches } from "@/lib/demo-data";
 import type { ReservationRecord } from "@/lib/reservations";
 
-type SendReservationEmailResult = {
+export type SendReservationEmailResult = {
   status: "sent" | "not_configured" | "failed";
   recipient?: string;
   message?: string;
+  sentAt?: string;
 };
 
 const envKeyForBranch = (slug: string) => `${slug.toUpperCase().replaceAll("-", "_")}_RESERVATION_EMAIL`;
@@ -98,6 +99,5 @@ export async function sendReservationEmail(reservation: ReservationRecord): Prom
     return { status: "failed", recipient, message: payload };
   }
 
-  return { status: "sent", recipient };
+  return { status: "sent", recipient, sentAt: new Date().toISOString() };
 }
-

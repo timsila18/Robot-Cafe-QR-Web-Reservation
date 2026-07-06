@@ -13,6 +13,7 @@ export type Permission =
   | "manage_qr"
   | "view_analytics"
   | "manage_feedback"
+  | "manage_reservations"
   | "manage_feature_flags"
   | "manage_settings"
   | "view_audit_logs"
@@ -64,6 +65,7 @@ export const rolePermissions: Record<AdminRole, Permission[]> = {
     "manage_qr",
     "view_analytics",
     "manage_feedback",
+    "manage_reservations",
     "manage_feature_flags",
     "manage_settings",
     "view_audit_logs",
@@ -79,8 +81,9 @@ export const rolePermissions: Record<AdminRole, Permission[]> = {
     "manage_qr",
     "view_analytics",
     "manage_feedback",
+    "manage_reservations",
   ],
-  branch_manager: ["manage_menu", "manage_images", "manage_qr", "view_analytics", "manage_feedback"],
+  branch_manager: ["manage_menu", "manage_images", "manage_qr", "view_analytics", "manage_feedback", "manage_reservations"],
   content_manager: ["manage_menu", "manage_images", "manage_categories"],
 };
 

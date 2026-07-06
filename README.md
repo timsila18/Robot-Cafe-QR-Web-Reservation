@@ -36,6 +36,7 @@ RESERVATION_FROM_EMAIL=Robot Cafe <onboarding@resend.dev>
 IMAARA_MALL_RESERVATION_EMAIL=imaara@robotcafe.co.ke
 LANA_PLAZA_RESERVATION_EMAIL=lana@robotcafe.co.ke
 REQUIRE_RESERVATION_EMAIL=false
+REQUIRE_SUPABASE_PERSISTENCE=false
 ```
 
 `NEXT_PUBLIC_IMAGE_STORAGE_DRIVER=auto` tries the production Supabase Storage upload API first and falls back to local demo data URLs if Supabase is not configured. Use `supabase` to require production storage, or `local` for offline demos.
@@ -67,6 +68,17 @@ Reservations post to `/api/reservations`. The selected branch decides the email 
 - Lana Plaza: `LANA_PLAZA_RESERVATION_EMAIL`
 
 Email is sent through Resend when `RESEND_API_KEY` is configured. Keep `REQUIRE_RESERVATION_EMAIL=false` while testing so the website accepts reservations even if email credentials are not live yet. Set it to `true` before final launch if reservations must fail whenever email delivery is unavailable.
+
+Reservations persist to Supabase when `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are configured and the reservations migration has been applied. Keep `REQUIRE_SUPABASE_PERSISTENCE=false` during previews; set it to `true` before final launch if the site must reject reservations whenever database writes fail.
+
+## Production Readiness Checklist
+
+- Apply Supabase migrations, including `reservations`.
+- Configure Supabase Storage and set `NEXT_PUBLIC_IMAGE_STORAGE_DRIVER=supabase`.
+- Configure Resend and real branch reservation inboxes.
+- Import existing Robot Cafe photos by pasting hosted URLs in admin or by a later batch import script using the same menu image fields.
+- Smoke test `/admin/login`, `/admin/menu`, `/admin/reservations`, `/menu`, both branch menu routes, `/reservations`, and `/feedback`.
+- Point `qr.robotcafe.co.ke` to Vercel only after storage, email, and persistence are verified.
 
 ## Admin Routes
 

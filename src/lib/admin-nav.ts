@@ -7,6 +7,7 @@ export const adminNavItems: readonly [string, string, Permission | undefined][] 
   ["Branches", "/admin/branches", "manage_branches"],
   ["Users", "/admin/users", "manage_users"],
   ["Feedback", "/admin/feedback", "manage_feedback"],
+  ["Reservations", "/admin/reservations", "manage_reservations"],
   ["Analytics", "/admin/analytics", "view_analytics"],
   ["QR Codes", "/admin/qr-codes", "manage_qr"],
   ["Audit Logs", "/admin/audit-logs", "view_audit_logs"],
