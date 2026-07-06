@@ -41,7 +41,7 @@ export function HeroSection({
               <span className="text-[#6dc6ff]">QR Ready</span>
             </div>
             <div className="mt-10 rounded-xl border border-white/10 bg-white/10 p-4 shadow-[0_18px_50px_rgba(0,0,0,.24)]">
-              <p className="text-sm text-[#b8d8ff]">Imaara Mall</p>
+              <p className="text-sm text-[#b8d8ff]">Branch selected</p>
               <p className="mt-2 text-3xl font-black text-white">Reserve Cappuccino</p>
               <p className="mt-3 text-sm leading-6 text-[#d7e7f8]">Velvety espresso, microfoam, and cocoa finish.</p>
               <div className="mt-8 flex items-center justify-between">

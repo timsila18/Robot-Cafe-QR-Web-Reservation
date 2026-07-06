@@ -6,8 +6,7 @@ export function AdminAnalyticsReport() {
     ["Today's Visits", analytics.todayVisits],
     ["Weekly Visits", analytics.weeklyVisits],
     ["Monthly Visits", analytics.monthlyVisits],
-    ["Imaara Visits", analytics.imaaraVisits],
-    ["Lana Visits", analytics.lanaVisits],
+    ...analytics.branchVisits.map(([branch, visits]) => [`${branch} Visits`, visits] as [string, number]),
     ["Feedback Conversion", `${analytics.feedbackConversion}%`],
   ];
 

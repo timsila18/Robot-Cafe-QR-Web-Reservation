@@ -23,6 +23,12 @@ export type ManagedImage = {
   isPrimary: boolean;
   sortOrder: number;
   createdAt: string;
+  storagePaths?: {
+    original?: string;
+    thumbnail?: string;
+    card?: string;
+    detail?: string;
+  };
   originalMetadata?: {
     originalFileName: string;
     originalFileSize: number;

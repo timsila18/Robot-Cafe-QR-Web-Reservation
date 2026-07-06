@@ -11,7 +11,7 @@ export function AdminTopbar() {
         </div>
         <div className="flex gap-2 overflow-x-auto">
           <Link className="ghost-button min-h-11 border-white/15 bg-white/10 px-4 text-white hover:bg-white/15" href="/menu">View Menu</Link>
-          <Link className="premium-button min-h-11 px-4" href="/menu/imaara-mall">Imaara QR</Link>
+          <Link className="premium-button min-h-11 px-4" href="/admin/qr-codes">QR Hub</Link>
           <LogoutButton />
         </div>
       </div>

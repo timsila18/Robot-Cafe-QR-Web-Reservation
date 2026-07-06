@@ -37,8 +37,8 @@ export default function Home() {
               The customer flow, branch model, admin surfaces, and demo data are all wired as the foundation for a production deployment.
             </p>
           </div>
-          <Link className="premium-button w-full sm:w-auto" href="/menu/imaara-mall">
-            Enter Imaara Mall
+          <Link className="premium-button w-full sm:w-auto" href="/menu">
+            Choose Branch
           </Link>
         </div>
       </section>

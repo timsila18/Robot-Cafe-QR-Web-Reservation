@@ -162,7 +162,7 @@ export function getAnalyticsMetrics() {
   const scans = qrScanStore;
   const since = (days: number) => new Date(Date.now() - days * 24 * 60 * 60 * 1000);
   const countSince = (days: number) => scans.filter((scan) => new Date(scan.createdAt) >= since(days)).length;
-  const byBranch = (branchSlug: string) => scans.filter((scan) => scan.branchId === branches.find((branch) => branch.slug === branchSlug)?.id).length;
+  const byBranch = (branchId: string) => scans.filter((scan) => scan.branchId === branchId).length;
   const rank = (values: (string | undefined)[]) => {
     const counts = new Map<string, number>();
     values.filter(Boolean).forEach((value) => counts.set(String(value), (counts.get(String(value)) ?? 0) + 1));
@@ -174,8 +174,7 @@ export function getAnalyticsMetrics() {
     weeklyVisits: countSince(7),
     monthlyVisits: countSince(30),
     totalVisits: scans.length,
-    imaaraVisits: byBranch("imaara-mall"),
-    lanaVisits: byBranch("lana-plaza"),
+    branchVisits: branches.map((branch) => [branch.name.replace("Robot Cafe - ", ""), byBranch(branch.id)] as [string, number]),
     topViewedItems: rank(scans.map((scan) => menuItems.find((item) => item.id === scan.itemId)?.name)),
     mostSearchedItems: rank(scans.map((scan) => scan.searchQuery)),
     mostViewedCategories: rank(scans.map((scan) => categories.find((category) => category.id === scan.categoryId)?.name)),

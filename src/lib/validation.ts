@@ -56,6 +56,14 @@ export const menuItemSchema = z.object({
         isPrimary: z.boolean(),
         sortOrder: z.number().int(),
         createdAt: z.string(),
+        storagePaths: z
+          .object({
+            original: z.string().optional(),
+            thumbnail: z.string().optional(),
+            card: z.string().optional(),
+            detail: z.string().optional(),
+          })
+          .optional(),
         originalMetadata: z
           .object({
             originalFileName: z.string(),

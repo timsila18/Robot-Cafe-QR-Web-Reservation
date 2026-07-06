@@ -11,8 +11,11 @@ export function AdminDashboard() {
     ["Featured Items", state.menuItems.filter((item) => item.isFeatured).length.toString(), "Promoted on branch menus"],
     ["Best Sellers", state.menuItems.filter((item) => item.isBestSeller).length.toString(), "High-intent discovery items"],
     ["New Arrivals", state.menuItems.filter((item) => item.isNewArrival).length.toString(), "Freshly promoted items"],
-    ["Imaara Visibility", state.menuItems.filter((item) => item.availableBranches.includes("imaara-mall")).length.toString(), "Items visible at Imaara Mall"],
-    ["Lana Visibility", state.menuItems.filter((item) => item.availableBranches.includes("lana-plaza")).length.toString(), "Items visible at Lana Plaza"],
+    ...state.branches.map((branch) => [
+      `${branch.name.replace("Robot Cafe - ", "")} Visibility`,
+      state.menuItems.filter((item) => item.availableBranches.includes(branch.slug)).length.toString(),
+      `Items visible at ${branch.name.replace("Robot Cafe - ", "")}`,
+    ]),
     ["Feedback Score", feedback.averageRating.toFixed(1), "Average overall guest rating"],
     ["QR Visits", analytics.totalVisits.toString(), "Captured menu and QR events"],
     ["Categories", state.categories.length.toString(), "Active menu taxonomy"],

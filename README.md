@@ -29,7 +29,30 @@ ROBOT_ADMIN_EMAIL=admin@robotcafe.co.ke
 ROBOT_ADMIN_PASSWORD=RobotCafe@2026
 NEXT_PUBLIC_SUPABASE_URL=
 SUPABASE_SERVICE_ROLE_KEY=
+SUPABASE_STORAGE_BUCKET=robot-cafe-menu-images
+NEXT_PUBLIC_IMAGE_STORAGE_DRIVER=auto
 ```
+
+`NEXT_PUBLIC_IMAGE_STORAGE_DRIVER=auto` tries the production Supabase Storage upload API first and falls back to local demo data URLs if Supabase is not configured. Use `supabase` to require production storage, or `local` for offline demos.
+
+## Production Photo Storage
+
+Menu uploads are optimized in the browser before upload. The production API stores the optimized versions in Supabase Storage:
+
+- `thumbnail` for admin/media thumbnails
+- `card` for menu cards
+- `detail` for item detail galleries
+- original file metadata for future audits/imports
+
+The default bucket is `robot-cafe-menu-images`. With `NEXT_PUBLIC_IMAGE_STORAGE_DRIVER=supabase`, failed storage configuration blocks uploads instead of silently using demo storage. Existing Robot Cafe hosted image URLs can still be pasted into the admin media library and saved against menu items, which gives the team a migration path for photos already paid for on the current QR site.
+
+## Go-Live Order
+
+1. Configure Supabase project env vars on Vercel.
+2. Confirm menu photo uploads create public Supabase Storage URLs.
+3. Reuse/import existing Robot Cafe hosted photos through the admin media library or a later batch import script.
+4. Verify admin login, menu edits, branch QR routes, feedback, and mobile menu.
+5. Point `qr.robotcafe.co.ke` to Vercel only after storage and admin workflows pass.
 
 ## Admin Routes
 

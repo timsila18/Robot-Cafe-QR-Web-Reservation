@@ -3,6 +3,14 @@ import { getOptimizedImageUrl } from "@/lib/images/image-utils";
 
 const imageId = () => `image-${crypto.randomUUID()}`;
 
+const productionBundle = (bundle: OptimizedImageBundle): OptimizedImageBundle => ({
+  ...bundle,
+  original: {
+    ...bundle.detail,
+    url: bundle.detail.url,
+  },
+});
+
 export class LocalStorageAdapter implements ImageStorageAdapter {
   name = "temporary-local-demo";
 
@@ -58,10 +66,62 @@ export class LocalStorageAdapter implements ImageStorageAdapter {
 }
 
 export class FutureSupabaseStorageAdapter extends LocalStorageAdapter {
-  name = "future-supabase-storage";
-  // Production switch point: upload each optimized Blob/Data URL to a Supabase
-  // Storage bucket, then return the public or signed URLs in the same ManagedImage
-  // shape. The admin UI will not need to change.
+  name = "supabase-storage";
+
+  async uploadImage(input: {
+    file: File;
+    bundle: OptimizedImageBundle;
+    menuItemId?: string;
+    sortOrder: number;
+    isPrimary: boolean;
+  }): Promise<ManagedImage> {
+    const response = await fetch("/api/admin/images", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "upload",
+        fileName: input.file.name,
+        bundle: productionBundle(input.bundle),
+        menuItemId: input.menuItemId,
+        sortOrder: input.sortOrder,
+        isPrimary: input.isPrimary,
+      }),
+    });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error ?? "Production image upload failed.");
+    return payload.data;
+  }
+
+  async deleteImage(image: ManagedImage) {
+    const response = await fetch("/api/admin/images", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "delete", image }),
+    });
+    if (!response.ok) {
+      const payload = await response.json();
+      throw new Error(payload.error ?? "Production image delete failed.");
+    }
+  }
+
+  async replaceImage(image: ManagedImage, file: File, bundle: OptimizedImageBundle): Promise<ManagedImage> {
+    const response = await fetch("/api/admin/images", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "replace",
+        image,
+        fileName: file.name,
+        bundle: productionBundle(bundle),
+        menuItemId: image.menuItemId,
+        sortOrder: image.sortOrder,
+        isPrimary: image.isPrimary,
+      }),
+    });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error ?? "Production image replacement failed.");
+    return payload.data;
+  }
 }
 
 export class FutureCloudinaryAdapter extends LocalStorageAdapter {
@@ -71,7 +131,44 @@ export class FutureCloudinaryAdapter extends LocalStorageAdapter {
   // ManagedImage. The admin workflow can keep using uploadImage/replaceImage.
 }
 
-export const activeImageStorageAdapter = new LocalStorageAdapter();
+class AutoImageStorageAdapter extends LocalStorageAdapter {
+  name = "auto-production-with-local-fallback";
+  private production = new FutureSupabaseStorageAdapter();
+
+  async uploadImage(input: {
+    file: File;
+    bundle: OptimizedImageBundle;
+    menuItemId?: string;
+    sortOrder: number;
+    isPrimary: boolean;
+  }) {
+    try {
+      return await this.production.uploadImage(input);
+    } catch (error) {
+      if (process.env.NEXT_PUBLIC_IMAGE_STORAGE_DRIVER === "supabase") throw error;
+      return super.uploadImage(input);
+    }
+  }
+
+  async deleteImage(image: ManagedImage) {
+    if (image.storagePaths) {
+      await this.production.deleteImage(image).catch(() => undefined);
+    }
+    return super.deleteImage(image);
+  }
+
+  async replaceImage(image: ManagedImage, file: File, bundle: OptimizedImageBundle) {
+    try {
+      return await this.production.replaceImage(image, file, bundle);
+    } catch (error) {
+      if (process.env.NEXT_PUBLIC_IMAGE_STORAGE_DRIVER === "supabase") throw error;
+      return super.replaceImage(image, file, bundle);
+    }
+  }
+}
+
+export const activeImageStorageAdapter =
+  process.env.NEXT_PUBLIC_IMAGE_STORAGE_DRIVER === "local" ? new LocalStorageAdapter() : new AutoImageStorageAdapter();
 
 export const uploadImage = activeImageStorageAdapter.uploadImage.bind(activeImageStorageAdapter);
 export const deleteImage = activeImageStorageAdapter.deleteImage.bind(activeImageStorageAdapter);

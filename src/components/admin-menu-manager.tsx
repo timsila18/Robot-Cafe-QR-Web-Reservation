@@ -548,7 +548,7 @@ function MenuItemEditor({
               </label>
             </div>
             <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-              <input className="h-12 flex-1 rounded-xl border border-slate-200 bg-white px-4" placeholder="Paste an external image URL" value={imageUrl} onChange={(event) => setImageUrl(event.target.value)} />
+              <input className="h-12 flex-1 rounded-xl border border-slate-200 bg-white px-4" placeholder="Paste existing Robot Cafe image URL" value={imageUrl} onChange={(event) => setImageUrl(event.target.value)} />
               <button className="ghost-button" type="button" onClick={() => addImage(imageUrl)}>Add URL</button>
             </div>
           </div>

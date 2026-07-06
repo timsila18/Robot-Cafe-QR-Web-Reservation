@@ -11,8 +11,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
           </Link>
           <nav className="scrollbar-none flex min-w-0 flex-1 items-center justify-end gap-2 overflow-x-auto text-sm font-extrabold text-white sm:gap-3">
             <Link className="shrink-0 rounded-full px-4 py-2 transition hover:bg-white/10" href="/menu">Menu</Link>
-            <Link className="shrink-0 rounded-full px-4 py-2 transition hover:bg-white/10" href="/menu/imaara-mall">Imaara</Link>
-            <Link className="shrink-0 rounded-full px-4 py-2 transition hover:bg-white/10" href="/menu/lana-plaza">Lana</Link>
+            <Link className="shrink-0 rounded-full px-4 py-2 transition hover:bg-white/10" href="/menu#branches">Branches</Link>
             <Link className="shrink-0 rounded-full px-4 py-2 transition hover:bg-white/10" href="/feedback">Feedback</Link>
             <Link className="shrink-0 rounded-full border border-[#168df2]/45 bg-[#168df2] px-5 py-2.5 text-white shadow-[0_16px_34px_rgba(8,119,189,.32)] transition hover:bg-[#0877bd]" href="/admin">Admin</Link>
           </nav>
