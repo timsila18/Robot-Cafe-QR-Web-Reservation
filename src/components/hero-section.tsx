@@ -50,7 +50,16 @@ export function HeroSection({
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_54%_34%,transparent_0,rgba(2,6,13,.08)_38%,rgba(2,6,13,.78)_100%)]" />
             <div className="robot-scanline left-0 top-16" />
             <div className="relative flex items-center justify-between text-xs uppercase tracking-[0.22em] text-[#b8d8ff]">
-              <span>Live Menu</span>
+              <span className="rounded-lg border border-[#168df2]/35 bg-white px-3 py-2 shadow-[0_14px_34px_rgba(0,0,0,.3)]">
+                <Image
+                  alt="Robot Cafe"
+                  className="h-auto w-28"
+                  height={40}
+                  priority
+                  src="/robot-cafe-logo.png"
+                  width={112}
+                />
+              </span>
               <span className="text-gold">QR Ready</span>
             </div>
             <div className="absolute bottom-5 left-5 right-5 rounded-xl border border-gold/18 bg-black/48 p-4 shadow-[0_18px_50px_rgba(0,0,0,.34)] backdrop-blur-xl">

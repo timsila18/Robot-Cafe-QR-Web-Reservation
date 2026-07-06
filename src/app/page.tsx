@@ -82,7 +82,15 @@ export default function Home() {
             <div className="absolute inset-10 rounded-[36px] border border-[#34b8ff]/25" />
             <div className="absolute inset-20 rounded-[28px] border border-[#34b8ff]/18" />
             <div className="absolute inset-0 grid place-items-center">
-              <div className="grid size-28 place-items-center rounded-3xl border border-[#34b8ff]/50 bg-[#34b8ff]/10 text-4xl font-black text-[#34b8ff]">RC</div>
+              <div className="rounded-3xl border border-[#34b8ff]/45 bg-white p-5 shadow-[0_24px_70px_rgba(0,0,0,.42)]">
+                <Image
+                  alt="Robot Cafe"
+                  className="h-auto w-44"
+                  height={40}
+                  src="/robot-cafe-logo.png"
+                  width={112}
+                />
+              </div>
             </div>
           </div>
           <div>
@@ -102,8 +110,8 @@ export default function Home() {
             </div>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex flex-wrap gap-4 text-xs font-semibold text-[#9fb3c8]">
-                <span className="text-gold">● Instant routing</span>
-                <span className="text-gold">● Branch email alerts</span>
+                <span className="text-gold">Instant routing</span>
+                <span className="text-gold">Branch email alerts</span>
               </div>
               <Link className="premium-button" href="/reservations">Reserve Table</Link>
             </div>
