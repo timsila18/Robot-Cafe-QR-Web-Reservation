@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { BrandMark } from "@/components/brand-mark";
 
 type HeroSectionProps = {
   title: string;
@@ -51,14 +52,7 @@ export function HeroSection({
             <div className="robot-scanline left-0 top-16" />
             <div className="relative flex items-center justify-between text-xs uppercase tracking-[0.22em] text-[#b8d8ff]">
               <span className="rounded-lg border border-[#168df2]/35 bg-white px-3 py-2 shadow-[0_14px_34px_rgba(0,0,0,.3)]">
-                <Image
-                  alt="Robot Cafe"
-                  className="h-auto w-28"
-                  height={40}
-                  priority
-                  src="/robot-cafe-logo.png"
-                  width={112}
-                />
+                <BrandMark imageClassName="w-28" />
               </span>
               <span className="text-gold">QR Ready</span>
             </div>

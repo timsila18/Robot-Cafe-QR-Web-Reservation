@@ -1,7 +1,7 @@
-import Link from "next/link";
 import Image from "next/image";
 import { Footer } from "@/components/footer";
 import { HeroSection } from "@/components/hero-section";
+import { HomeReservationPanel } from "@/components/home-reservation-panel";
 import { PublicLayout } from "@/components/public-layout";
 import { branches, formatPrice, menuItems } from "@/lib/demo-data";
 import { getOptimizedImageUrl, getPrimaryImage } from "@/lib/images/image-utils";
@@ -76,48 +76,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-7xl px-5 pb-20 pt-5 sm:px-8">
-        <div className="grid gap-5 rounded-[24px] border border-gold/35 bg-black/22 p-5 shadow-[0_30px_100px_rgba(0,0,0,.35)] backdrop-blur-2xl lg:grid-cols-[0.82fr_1.18fr]">
-          <div className="relative hidden min-h-72 overflow-hidden rounded-2xl border border-[#34b8ff]/20 bg-[radial-gradient(circle_at_50%_50%,rgba(52,184,255,.24),transparent_12rem),linear-gradient(145deg,#02060d,#061827)] lg:block">
-            <div className="absolute inset-10 rounded-[36px] border border-[#34b8ff]/25" />
-            <div className="absolute inset-20 rounded-[28px] border border-[#34b8ff]/18" />
-            <div className="absolute inset-0 grid place-items-center">
-              <div className="rounded-3xl border border-[#34b8ff]/45 bg-white p-5 shadow-[0_24px_70px_rgba(0,0,0,.42)]">
-                <Image
-                  alt="Robot Cafe"
-                  className="h-auto w-44"
-                  height={40}
-                  src="/robot-cafe-logo.png"
-                  width={112}
-                />
-              </div>
-            </div>
-          </div>
-          <div>
-            <h2 className="text-3xl font-black text-white">Make a Reservation</h2>
-            <p className="mt-2 text-sm font-medium text-[#9fb3c8]">Book your table in seconds. The request routes to the selected branch.</p>
-            <div className="mt-6 grid gap-3 sm:grid-cols-3">
-              {["Branch", "Date", "Time", "Guests", "Email", "Phone"].map((label) => (
-                <div className="rounded-xl border border-white/10 bg-[#06111f]/80 px-4 py-3" key={label}>
-                  <p className="text-xs text-[#9fb3c8]">{label}</p>
-                  <p className="mt-2 text-sm font-bold text-white">{label === "Guests" ? "2 Guests" : label === "Branch" ? "Select branch" : label === "Phone" ? "07X XXX XXXX" : label === "Email" ? "you@email.com" : "Select"}</p>
-                </div>
-              ))}
-            </div>
-            <div className="mt-4 rounded-xl border border-white/10 bg-[#06111f]/80 px-4 py-3">
-              <p className="text-xs text-[#9fb3c8]">Special Request</p>
-              <p className="mt-2 text-sm font-bold text-white/70">Any special requests...</p>
-            </div>
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex flex-wrap gap-4 text-xs font-semibold text-[#9fb3c8]">
-                <span className="text-gold">Instant routing</span>
-                <span className="text-gold">Branch email alerts</span>
-              </div>
-              <Link className="premium-button" href="/reservations">Reserve Table</Link>
-            </div>
-          </div>
-        </div>
-      </section>
+      <HomeReservationPanel />
 
       <Footer />
     </PublicLayout>

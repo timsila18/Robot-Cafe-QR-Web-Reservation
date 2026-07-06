@@ -1,13 +1,20 @@
 import Image from "next/image";
 
-export function BrandMark() {
+type BrandMarkProps = {
+  className?: string;
+  imageClassName?: string;
+  priority?: boolean;
+};
+
+export function BrandMark({ className = "", imageClassName = "w-[122px]", priority = true }: BrandMarkProps) {
   return (
-    <div className="flex items-center" aria-label="Robot Cafe">
+    <div className={`robot-logo-mark flex items-center ${className}`} aria-label="Robot Cafe">
+      <span className="robot-logo-aura" aria-hidden="true" />
       <Image
         alt="Robot Cafe"
-        className="h-auto w-[122px]"
+        className={`relative z-10 h-auto ${imageClassName}`}
         height={40}
-        priority
+        priority={priority}
         src="/robot-cafe-logo.png"
         width={112}
       />

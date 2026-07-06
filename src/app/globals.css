@@ -186,6 +186,48 @@ body {
   transform: translateY(-2px);
 }
 
+.reservation-field {
+  background: rgba(4, 14, 26, .84);
+  border: 1px solid rgba(52, 184, 255, .18);
+  border-radius: 14px;
+  display: block;
+  min-width: 0;
+  padding: .9rem 1rem;
+  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.reservation-field:focus-within {
+  border-color: rgba(216, 169, 40, .68);
+  box-shadow: 0 0 0 4px rgba(216, 169, 40, .1), 0 18px 42px rgba(0,0,0,.22);
+  transform: translateY(-1px);
+}
+
+.reservation-field span {
+  color: #9fb3c8;
+  display: block;
+  font-size: .78rem;
+  font-weight: 800;
+  margin-bottom: .45rem;
+}
+
+.reservation-field :is(input, select) {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  color: #ffffff;
+  font-size: .98rem;
+  font-weight: 850;
+  min-height: 1.8rem;
+  outline: 0;
+  padding: 0;
+  width: 100%;
+}
+
+.reservation-field :is(input, select)::placeholder {
+  color: rgba(255,255,255,.52);
+}
+
 .premium-header {
   background:
     linear-gradient(90deg, rgba(3,8,15,.98), rgba(7,24,39,.94)),
@@ -199,6 +241,63 @@ body {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+.robot-logo-mark {
+  isolation: isolate;
+  position: relative;
+}
+
+.robot-logo-mark::before {
+  animation: logo-ring 5.8s ease-in-out infinite;
+  background:
+    conic-gradient(from 90deg, transparent, rgba(52,184,255,.72), transparent 32%, rgba(216,169,40,.78), transparent 68%),
+    radial-gradient(circle, rgba(52,184,255,.16), transparent 62%);
+  border-radius: 16px;
+  content: "";
+  inset: -8px -10px;
+  opacity: .62;
+  position: absolute;
+  z-index: -2;
+}
+
+.robot-logo-mark::after {
+  animation: logo-sheen 4.8s ease-in-out infinite;
+  background: linear-gradient(100deg, transparent 18%, rgba(255,255,255,.65), transparent 42%);
+  border-radius: 14px;
+  content: "";
+  inset: -2px;
+  opacity: .48;
+  position: absolute;
+  transform: translateX(-115%);
+  z-index: 0;
+}
+
+.robot-logo-aura {
+  animation: logo-pulse 4.2s ease-in-out infinite;
+  background: radial-gradient(circle, rgba(52,184,255,.28), transparent 68%);
+  border-radius: 999px;
+  filter: blur(10px);
+  inset: -18px;
+  pointer-events: none;
+  position: absolute;
+  z-index: -1;
+}
+
+@keyframes logo-pulse {
+  0%, 100% { opacity: .45; transform: scale(.96); }
+  50% { opacity: .92; transform: scale(1.04); }
+}
+
+@keyframes logo-ring {
+  0%, 100% { filter: blur(10px); opacity: .38; transform: rotate(0deg) scale(.98); }
+  50% { filter: blur(7px); opacity: .74; transform: rotate(180deg) scale(1.02); }
+}
+
+@keyframes logo-sheen {
+  0%, 36% { transform: translateX(-120%); opacity: 0; }
+  48% { opacity: .42; }
+  64%, 100% { transform: translateX(120%); opacity: 0; }
 }
 
 .luxury-panel :is(.text-slate-950, .text-slate-900, .text-slate-800, .text-slate-700),
