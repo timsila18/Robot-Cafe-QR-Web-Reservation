@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 type HeroSectionProps = {
   title: string;
@@ -38,28 +39,27 @@ export function HeroSection({
       <div className="relative z-10">
         <div className="rounded-[28px] border border-gold/20 bg-black/25 p-4 shadow-[0_35px_110px_rgba(0,0,0,.52)] backdrop-blur-2xl">
           <div className="relative aspect-[4/5] overflow-hidden rounded-2xl border border-gold/16 bg-[radial-gradient(circle_at_50%_18%,rgba(216,169,40,0.18),transparent_16rem),radial-gradient(circle_at_18%_42%,rgba(52,184,255,0.26),transparent_14rem),linear-gradient(145deg,#02060d,#0a2235)] p-5">
+            <Image
+              alt="Robot Cafe futuristic dining service robot"
+              className="absolute inset-0 h-full w-full object-cover opacity-90"
+              fill
+              priority
+              sizes="(min-width: 1024px) 520px, 100vw"
+              src="/robot-cafe-hero-robot.png"
+            />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_54%_34%,transparent_0,rgba(2,6,13,.08)_38%,rgba(2,6,13,.78)_100%)]" />
             <div className="robot-scanline left-0 top-16" />
-            <div className="flex items-center justify-between text-xs uppercase tracking-[0.22em] text-[#b8d8ff]">
+            <div className="relative flex items-center justify-between text-xs uppercase tracking-[0.22em] text-[#b8d8ff]">
               <span>Live Menu</span>
               <span className="text-gold">QR Ready</span>
             </div>
-            <div className="mt-10 rounded-xl border border-gold/18 bg-black/30 p-4 shadow-[0_18px_50px_rgba(0,0,0,.34)] backdrop-blur-xl">
+            <div className="absolute bottom-5 left-5 right-5 rounded-xl border border-gold/18 bg-black/48 p-4 shadow-[0_18px_50px_rgba(0,0,0,.34)] backdrop-blur-xl">
               <p className="text-sm text-[#b8d8ff]">Branch selected</p>
               <p className="mt-2 text-3xl font-black text-white">Reserve Cappuccino</p>
               <p className="mt-3 text-sm leading-6 text-[#d7e7f8]">Velvety espresso, microfoam, and cocoa finish.</p>
               <div className="mt-8 flex items-center justify-between">
                 <span className="text-2xl font-black text-gold">KES 420</span>
                 <span className="rounded-md border border-gold/35 bg-gold/12 px-3 py-2 text-xs font-bold text-[#fff2bf]">Featured</span>
-              </div>
-            </div>
-            <div className="mt-4 grid grid-cols-2 gap-3">
-              <div className="rounded-xl border border-white/10 bg-white/8 p-4">
-                <p className="text-xs text-[#b8d8ff]">Search</p>
-                <p className="mt-3 text-sm font-bold text-white">Coffee</p>
-              </div>
-              <div className="rounded-xl border border-white/10 bg-white/8 p-4">
-                <p className="text-xs text-[#b8d8ff]">Branch</p>
-                <p className="mt-3 text-sm font-bold text-white">Auto detected</p>
               </div>
             </div>
           </div>
