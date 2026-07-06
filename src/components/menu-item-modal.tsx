@@ -39,7 +39,7 @@ export function MenuItemModal({ item, branch, onClose }: MenuItemModalProps) {
       className="fixed inset-0 z-50 grid place-items-end bg-black/70 p-0 backdrop-blur-sm sm:place-items-center sm:p-5"
       role="dialog"
     >
-      <div className="max-h-[92svh] w-full max-w-4xl overflow-y-auto rounded-t-2xl border border-slate-200 bg-white shadow-2xl sm:rounded-2xl">
+      <div className="max-h-[92svh] w-full max-w-4xl overflow-y-auto rounded-t-2xl border border-gold/20 bg-[#050e19] text-white shadow-2xl sm:rounded-2xl">
         <div className="relative min-h-80 overflow-hidden bg-slate-100">
           <Image
             alt={imageAlt(item.name, "detail photo")}
@@ -54,7 +54,7 @@ export function MenuItemModal({ item, branch, onClose }: MenuItemModalProps) {
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/18 via-black/10 to-black/92" />
           <button
-            className="absolute right-4 top-4 grid size-11 place-items-center rounded-xl border border-white/40 bg-white/80 text-xl text-slate-700 transition hover:border-gold hover:text-gold"
+            className="absolute right-4 top-4 grid size-11 place-items-center rounded-xl border border-white/20 bg-black/55 text-xl text-white transition hover:border-gold hover:text-gold"
             type="button"
             onClick={onClose}
             aria-label="Close details"
@@ -75,7 +75,7 @@ export function MenuItemModal({ item, branch, onClose }: MenuItemModalProps) {
         <div className="grid gap-6 p-6 sm:grid-cols-[1fr_0.72fr] sm:p-8">
           <div>
             <p className="text-sm uppercase tracking-[0.28em] text-gold">Details</p>
-            <p className="mt-4 text-base leading-8 text-slate-600">{item.description}</p>
+            <p className="mt-4 text-base leading-8 text-[#d7e7f8]">{item.description}</p>
             <div className="mt-6 grid gap-3 sm:grid-cols-3">
               <InfoTile label="Prep Time" value={`${item.preparationTime} min`} />
               <InfoTile label="Calories" value={`${item.calories} cal`} />
@@ -146,9 +146,9 @@ export function MenuItemModal({ item, branch, onClose }: MenuItemModalProps) {
 
 function InfoTile({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-      <p className="text-xs uppercase tracking-[0.16em] text-slate-400">{label}</p>
-      <p className="mt-2 font-semibold text-slate-950">{value}</p>
+    <div className="rounded-xl border border-gold/15 bg-white/5 p-3">
+      <p className="text-xs uppercase tracking-[0.16em] text-[#9fb3c8]">{label}</p>
+      <p className="mt-2 font-semibold text-white">{value}</p>
     </div>
   );
 }

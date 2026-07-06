@@ -14,7 +14,7 @@ export function MenuItemCard({ item, onViewDetails }: MenuItemCardProps) {
   const imageUrl = getOptimizedImageUrl(primaryImage, "card");
 
   return (
-    <article className="group w-full min-w-0 max-w-full overflow-hidden rounded-[22px] border border-white/10 bg-[linear-gradient(145deg,rgba(7,24,39,.92),rgba(8,55,86,.74))] shadow-[0_24px_70px_rgba(0,0,0,.26)] transition duration-300 hover:-translate-y-1 hover:border-[#168df2]/50 hover:shadow-[0_30px_80px_rgba(8,119,189,.22)]">
+    <article className="group w-full min-w-0 max-w-full overflow-hidden rounded-[22px] border border-gold/14 bg-[linear-gradient(145deg,rgba(5,14,25,.96),rgba(8,37,59,.8))] shadow-[0_24px_80px_rgba(0,0,0,.34)] transition duration-300 hover:-translate-y-1 hover:border-gold/42 hover:shadow-[0_30px_90px_rgba(216,169,40,.14)]">
       <div className="relative aspect-[4/3] overflow-hidden bg-[#071827]">
         <Image
           alt={imageAlt(item.name)}
@@ -41,10 +41,10 @@ export function MenuItemCard({ item, onViewDetails }: MenuItemCardProps) {
       <div className="p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
           <div className="min-w-0">
-            <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#6dc6ff]">{category?.name}</p>
+            <p className="text-xs font-bold uppercase tracking-[0.24em] text-gold">{category?.name}</p>
             <h3 className="mt-2 text-xl font-black text-white">{item.name}</h3>
           </div>
-          <p className="shrink-0 text-lg font-black text-[#6dc6ff]">{formatPrice(item.price)}</p>
+          <p className="shrink-0 text-lg font-black text-gold">{formatPrice(item.price)}</p>
         </div>
         <p className="mt-3 line-clamp-2 min-h-12 text-sm font-medium leading-6 text-[#d7e7f8]">{item.description}</p>
         <div className="mt-4 flex items-center justify-between rounded-xl border border-white/10 bg-white/8 px-3 py-2 text-xs font-bold text-[#d7e7f8]">
