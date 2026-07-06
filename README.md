@@ -31,6 +31,11 @@ NEXT_PUBLIC_SUPABASE_URL=
 SUPABASE_SERVICE_ROLE_KEY=
 SUPABASE_STORAGE_BUCKET=robot-cafe-menu-images
 NEXT_PUBLIC_IMAGE_STORAGE_DRIVER=auto
+RESEND_API_KEY=
+RESERVATION_FROM_EMAIL=Robot Cafe <onboarding@resend.dev>
+IMAARA_MALL_RESERVATION_EMAIL=imaara@robotcafe.co.ke
+LANA_PLAZA_RESERVATION_EMAIL=lana@robotcafe.co.ke
+REQUIRE_RESERVATION_EMAIL=false
 ```
 
 `NEXT_PUBLIC_IMAGE_STORAGE_DRIVER=auto` tries the production Supabase Storage upload API first and falls back to local demo data URLs if Supabase is not configured. Use `supabase` to require production storage, or `local` for offline demos.
@@ -53,6 +58,15 @@ The default bucket is `robot-cafe-menu-images`. With `NEXT_PUBLIC_IMAGE_STORAGE_
 3. Reuse/import existing Robot Cafe hosted photos through the admin media library or a later batch import script.
 4. Verify admin login, menu edits, branch QR routes, feedback, and mobile menu.
 5. Point `qr.robotcafe.co.ke` to Vercel only after storage and admin workflows pass.
+
+## Reservation Email Routing
+
+Reservations post to `/api/reservations`. The selected branch decides the email recipient:
+
+- Imaara Mall: `IMAARA_MALL_RESERVATION_EMAIL`
+- Lana Plaza: `LANA_PLAZA_RESERVATION_EMAIL`
+
+Email is sent through Resend when `RESEND_API_KEY` is configured. Keep `REQUIRE_RESERVATION_EMAIL=false` while testing so the website accepts reservations even if email credentials are not live yet. Set it to `true` before final launch if reservations must fail whenever email delivery is unavailable.
 
 ## Admin Routes
 

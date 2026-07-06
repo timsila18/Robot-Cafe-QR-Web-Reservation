@@ -36,7 +36,7 @@ export const adminBranchesSeed: AdminBranch[] = branches.map((branch) => ({
   slug: branch.slug,
   location: branch.location,
   phone: branch.phone,
-  email: branch.slug === "imaara-mall" ? "imaara@robotcafe.co.ke" : "lana@robotcafe.co.ke",
+  email: branch.email,
   openingHours: "8:00 AM - 10:00 PM",
   isActive: branch.isActive,
   updatedAt: branch.updatedAt,

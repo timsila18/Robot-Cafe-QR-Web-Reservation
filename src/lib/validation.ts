@@ -111,6 +111,18 @@ export const feedbackSchema = z.object({
   comment: z.string().min(3).max(1200),
 });
 
+export const reservationSchema = z.object({
+  name: z.string().min(2).max(120),
+  phone: z.string().min(5).max(40),
+  email: z.string().email().optional().or(z.literal("")).default(""),
+  branchId: z.string().min(1),
+  reservationDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use a valid reservation date."),
+  reservationTime: z.string().regex(/^\d{2}:\d{2}$/, "Use a valid reservation time."),
+  guests: z.coerce.number().int().min(1).max(40),
+  occasion: z.string().max(120).optional().default(""),
+  notes: z.string().max(800).optional().default(""),
+});
+
 export const qrScanSchema = z.object({
   branchId: z.string().optional(),
   route: z.string().max(240).optional().default(""),
@@ -135,3 +147,4 @@ export const adminLoginSchema = z.object({
 export type MenuItemInput = z.infer<typeof menuItemSchema>;
 export type CategoryInput = z.infer<typeof categorySchema>;
 export type BranchInput = z.infer<typeof branchSchema>;
+export type ReservationInput = z.infer<typeof reservationSchema>;

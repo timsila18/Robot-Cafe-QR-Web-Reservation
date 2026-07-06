@@ -204,7 +204,10 @@ export function MenuExperience({ branch, categories, items }: MenuExperienceProp
             <h2 className="text-xl font-black text-white">How was your Robot Cafe experience?</h2>
             <p className="mt-1 text-sm font-medium text-[#d7e7f8]">Share a quick signal with the team after browsing or dining.</p>
           </div>
-          <Link className="premium-button" href={`/feedback?branch=${branch.slug}`}>Give Feedback</Link>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Link className="ghost-button border-white/15 bg-white/10 text-white hover:bg-white/15" href={`/reservations?branch=${branch.slug}`}>Reserve Table</Link>
+            <Link className="premium-button" href={`/feedback?branch=${branch.slug}`}>Give Feedback</Link>
+          </div>
         </div>
       </section>
       <MenuItemModal branch={branch} item={selectedItem} onClose={() => setSelectedItem(null)} />

@@ -4,6 +4,7 @@ export type Branch = {
   slug: string;
   location: string;
   phone: string;
+  email: string;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -66,6 +67,7 @@ export const branches: Branch[] = [
     slug: "imaara-mall",
     location: "Imaara Mall, Nairobi",
     phone: "+254 700 000 101",
+    email: "imaara@robotcafe.co.ke",
     isActive: true,
     createdAt: now,
     updatedAt: now,
@@ -76,6 +78,7 @@ export const branches: Branch[] = [
     slug: "lana-plaza",
     location: "Lana Plaza, Nairobi",
     phone: "+254 700 000 202",
+    email: "lana@robotcafe.co.ke",
     isActive: true,
     createdAt: now,
     updatedAt: now,

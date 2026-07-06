@@ -9,9 +9,14 @@ export function BranchCard({ branch }: { branch: Branch }) {
         <h2 className="mt-5 text-3xl font-black text-white">{branch.name.replace("Robot Cafe - ", "")}</h2>
         <p className="mt-3 text-sm font-medium leading-6 text-[#d7e7f8]">{branch.location}</p>
       </div>
-      <Link className="premium-button mt-8" href={`/menu/${branch.slug}`}>
-        Enter Branch
-      </Link>
+      <div className="mt-8 grid gap-2 sm:grid-cols-2">
+        <Link className="premium-button" href={`/menu/${branch.slug}`}>
+          Enter Branch
+        </Link>
+        <Link className="ghost-button border-white/15 bg-white/10 text-white hover:bg-white/15" href={`/reservations?branch=${branch.slug}`}>
+          Reserve
+        </Link>
+      </div>
     </article>
   );
 }
