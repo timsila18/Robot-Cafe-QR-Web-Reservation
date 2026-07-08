@@ -2,7 +2,8 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { MenuExperience } from "@/components/menu-experience";
 import { PublicLayout } from "@/components/public-layout";
-import { categories, getBranchBySlug, getItemsForBranch } from "@/lib/demo-data";
+import { listAdminState } from "@/lib/admin-store";
+import { toPublicCategories, toPublicMenuItems } from "@/lib/demo-persistence";
 
 type BranchMenuPageProps = {
   params: Promise<{
@@ -10,13 +11,12 @@ type BranchMenuPageProps = {
   }>;
 };
 
-export function generateStaticParams() {
-  return [{ branchSlug: "imaara-mall" }, { branchSlug: "lana-plaza" }];
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: BranchMenuPageProps): Promise<Metadata> {
   const { branchSlug } = await params;
-  const branch = getBranchBySlug(branchSlug);
+  const state = await listAdminState();
+  const branch = state.branches.find((entry) => entry.slug === branchSlug);
   if (!branch) return {};
   return {
     title: `${branch.name.replace("Robot Cafe - ", "")} Menu`,
@@ -31,11 +31,18 @@ export async function generateMetadata({ params }: BranchMenuPageProps): Promise
 
 export default async function BranchMenuPage({ params }: BranchMenuPageProps) {
   const { branchSlug } = await params;
-  const branch = getBranchBySlug(branchSlug);
+  const state = await listAdminState();
+  const branch = state.branches.find((entry) => entry.slug === branchSlug && entry.isActive);
 
   if (!branch) {
     notFound();
   }
+
+  const activeCategories = toPublicCategories(state.categories.filter((category) => category.isActive));
+  const branchItems = toPublicMenuItems(
+    state.menuItems.filter((item) => item.isActive && item.availableBranches.includes(branch.slug)),
+  );
+  const publicBranch = { ...branch, createdAt: branch.updatedAt };
 
   return (
     <PublicLayout>
@@ -45,7 +52,7 @@ export default async function BranchMenuPage({ params }: BranchMenuPageProps) {
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "Restaurant",
-            name: branch.name,
+            name: publicBranch.name,
             address: branch.location,
             telephone: branch.phone,
             servesCuisine: ["Cafe", "Coffee", "Premium Casual Dining"],
@@ -53,7 +60,7 @@ export default async function BranchMenuPage({ params }: BranchMenuPageProps) {
           }),
         }}
       />
-      <MenuExperience branch={branch} categories={categories} items={getItemsForBranch(branch.slug)} />
+      <MenuExperience branch={publicBranch} categories={activeCategories} items={branchItems} />
     </PublicLayout>
   );
 }

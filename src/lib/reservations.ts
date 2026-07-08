@@ -1,4 +1,4 @@
-import { branches } from "@/lib/demo-data";
+import { listAdminState } from "@/lib/admin-store";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { ReservationInput } from "@/lib/validation";
 
@@ -6,7 +6,7 @@ export type ReservationRecord = ReservationInput & {
   id: string;
   branchSlug: string;
   branchName: string;
-  status: "new" | "emailed" | "email_pending" | "email_failed" | "confirmed" | "cancelled" | "completed";
+  status: "new" | "emailed" | "email_pending" | "email_failed" | "confirmed" | "cancelled" | "completed" | "expired";
   emailRecipient?: string;
   emailStatus: "not_sent" | "sent" | "not_configured" | "failed";
   emailMessage?: string;
@@ -50,7 +50,8 @@ const toRecord = (row: Record<string, unknown>): ReservationRecord => ({
 });
 
 export async function createReservation(input: ReservationInput) {
-  const branch = branches.find((entry) => entry.id === input.branchId);
+  const state = await listAdminState();
+  const branch = state.branches.find((entry) => entry.id === input.branchId && entry.isActive);
   if (!branch) throw new Error("Select a valid Robot Cafe branch.");
 
   const reservation: ReservationRecord = {
@@ -130,6 +131,33 @@ export async function markReservationEmailStatus(reservationId: string, patch: E
   return updated;
 }
 
+export async function completeReservation(reservationId: string) {
+  const supabase = createSupabaseServerClient();
+  if (supabase) {
+    const { data, error } = await supabase
+      .from("reservations")
+      .update({ status: "completed" })
+      .eq("id", reservationId)
+      .select("*")
+      .single();
+
+    if (error) {
+      if (process.env.REQUIRE_SUPABASE_PERSISTENCE === "true") throw new Error(`Unable to complete reservation: ${error.message}`);
+    } else {
+      return toRecord(data);
+    }
+  }
+
+  let updated: ReservationRecord | undefined;
+  reservationStore = reservationStore.map((reservation) => {
+    if (reservation.id !== reservationId) return reservation;
+    updated = { ...reservation, status: "completed", updatedAt: new Date().toISOString() };
+    return updated;
+  });
+  if (!updated) throw new Error("Reservation not found.");
+  return updated;
+}
+
 export async function listReservations() {
   const supabase = createSupabaseServerClient();
   if (supabase) {
@@ -142,9 +170,23 @@ export async function listReservations() {
     if (error) {
       if (process.env.REQUIRE_SUPABASE_PERSISTENCE === "true") throw new Error(`Unable to load reservations: ${error.message}`);
     } else {
-      return data.map(toRecord);
+      return expireReservations(data.map(toRecord));
     }
   }
 
+  reservationStore = expireReservations(reservationStore);
   return reservationStore;
+}
+
+function expireReservations(reservations: ReservationRecord[]) {
+  const nowMs = Date.now();
+  return reservations.map((reservation) => {
+    if (["cancelled", "completed", "expired"].includes(reservation.status)) return reservation;
+    const reservedAt = new Date(`${reservation.reservationDate}T${reservation.reservationTime}:00`).getTime();
+    if (Number.isNaN(reservedAt)) return reservation;
+    if (nowMs > reservedAt + 24 * 60 * 60 * 1000) {
+      return { ...reservation, status: "expired" as const, updatedAt: new Date().toISOString() };
+    }
+    return reservation;
+  });
 }

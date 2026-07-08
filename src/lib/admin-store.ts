@@ -39,6 +39,7 @@ type AdminState = {
 };
 
 const now = () => new Date().toISOString();
+const id = (prefix: string) => `${prefix}-${crypto.randomUUID()}`;
 
 const fallbackBranches: AdminBranch[] = branches.map((branch) => ({
   id: branch.id,
@@ -60,6 +61,15 @@ const emptyAdminState = (): AdminState => ({
   feedbackCount: 0,
   qrScans: 0,
 });
+
+declare global {
+  var robotCafeDemoAdminState: AdminState | undefined;
+}
+
+const demoState = () => {
+  globalThis.robotCafeDemoAdminState ??= emptyAdminState();
+  return globalThis.robotCafeDemoAdminState;
+};
 
 const requireSupabase = () => {
   const supabase = createSupabaseServerClient();
@@ -156,7 +166,7 @@ const toActivity = (row: Record<string, unknown>): ActivityLog => ({
 
 export async function listAdminState(): Promise<AdminState> {
   const supabase = createSupabaseServerClient();
-  if (!supabase) return emptyAdminState();
+  if (!supabase) return demoState();
 
   const [branchesResult, categoriesResult, menuItemsResult, activityResult, feedbackResult, qrResult] = await Promise.all([
     supabase.from("branches").select("*").order("name", { ascending: true }),
@@ -234,7 +244,12 @@ async function syncMenuItemBranches(menuItemId: string, branchSlugs: string[]) {
 }
 
 async function getMenuItem(itemId: string) {
-  const supabase = requireSupabase();
+  const supabase = createSupabaseServerClient();
+  if (!supabase) {
+    const item = demoState().menuItems.find((entry) => entry.id === itemId);
+    if (!item) throw new Error("Menu item not found.");
+    return item;
+  }
   const { data, error } = await supabase
     .from("menu_items")
     .select("*, menu_item_images(*), menu_item_branch_availability(is_available, branches(slug))")
@@ -245,7 +260,14 @@ async function getMenuItem(itemId: string) {
 }
 
 export async function createMenuItem(input: MenuItemInput) {
-  const supabase = requireSupabase();
+  const supabase = createSupabaseServerClient();
+  if (!supabase) {
+    const item = { ...input, id: id("item"), updatedAt: now() };
+    const state = demoState();
+    state.menuItems = [item, ...state.menuItems];
+    await logActivity("Menu Created", "menu_items", item.id);
+    return item;
+  }
   const { data, error } = await supabase
     .from("menu_items")
     .insert({
@@ -277,7 +299,19 @@ export async function createMenuItem(input: MenuItemInput) {
 }
 
 export async function updateMenuItem(itemId: string, input: MenuItemInput) {
-  const supabase = requireSupabase();
+  const supabase = createSupabaseServerClient();
+  if (!supabase) {
+    const state = demoState();
+    let updated: AdminMenuItem | undefined;
+    state.menuItems = state.menuItems.map((item) => {
+      if (item.id !== itemId) return item;
+      updated = { ...input, id: itemId, updatedAt: now() };
+      return updated;
+    });
+    if (!updated) throw new Error("Menu item not found.");
+    await logActivity("Menu Updated", "menu_items", itemId);
+    return updated;
+  }
   const { error } = await supabase
     .from("menu_items")
     .update({
@@ -309,7 +343,13 @@ export async function updateMenuItem(itemId: string, input: MenuItemInput) {
 
 export async function deleteMenuItem(itemId: string) {
   const existing = await getMenuItem(itemId);
-  const supabase = requireSupabase();
+  const supabase = createSupabaseServerClient();
+  if (!supabase) {
+    const state = demoState();
+    state.menuItems = state.menuItems.filter((item) => item.id !== itemId);
+    await logActivity("Menu Deleted", "menu_items", itemId);
+    return existing;
+  }
   const { error } = await supabase.from("menu_items").delete().eq("id", itemId);
   if (error) throw new Error(`Unable to delete menu item: ${error.message}`);
   await logActivity("Menu Deleted", "menu_items", itemId);
@@ -317,7 +357,14 @@ export async function deleteMenuItem(itemId: string) {
 }
 
 export async function createCategory(input: CategoryInput) {
-  const supabase = requireSupabase();
+  const supabase = createSupabaseServerClient();
+  if (!supabase) {
+    const category = { ...input, id: id("category"), updatedAt: now() };
+    const state = demoState();
+    state.categories = [category, ...state.categories].sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name));
+    await logActivity("Category Created", "categories", category.id);
+    return category;
+  }
   const { data, error } = await supabase
     .from("categories")
     .insert({
@@ -335,7 +382,21 @@ export async function createCategory(input: CategoryInput) {
 }
 
 export async function updateCategory(categoryId: string, input: CategoryInput) {
-  const supabase = requireSupabase();
+  const supabase = createSupabaseServerClient();
+  if (!supabase) {
+    const state = demoState();
+    let updated: AdminCategory | undefined;
+    state.categories = state.categories
+      .map((category) => {
+        if (category.id !== categoryId) return category;
+        updated = { ...input, id: categoryId, updatedAt: now() };
+        return updated;
+      })
+      .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name));
+    if (!updated) throw new Error("Category not found.");
+    await logActivity("Category Updated", "categories", categoryId);
+    return updated;
+  }
   const { data, error } = await supabase
     .from("categories")
     .update({
@@ -354,7 +415,14 @@ export async function updateCategory(categoryId: string, input: CategoryInput) {
 }
 
 export async function deleteCategory(categoryId: string) {
-  const supabase = requireSupabase();
+  const supabase = createSupabaseServerClient();
+  if (!supabase) {
+    const state = demoState();
+    if (state.menuItems.some((item) => item.categoryId === categoryId)) throw new Error("This category is referenced by menu items. Deactivate it instead.");
+    state.categories = state.categories.filter((category) => category.id !== categoryId);
+    await logActivity("Category Deleted", "categories", categoryId);
+    return;
+  }
   const { count, error: countError } = await supabase
     .from("menu_items")
     .select("id", { count: "exact", head: true })
@@ -368,7 +436,14 @@ export async function deleteCategory(categoryId: string) {
 }
 
 export async function createBranch(input: BranchInput) {
-  const supabase = requireSupabase();
+  const supabase = createSupabaseServerClient();
+  if (!supabase) {
+    const branch = { ...input, id: id("branch"), updatedAt: now() };
+    const state = demoState();
+    state.branches = [branch, ...state.branches].sort((a, b) => a.name.localeCompare(b.name));
+    await logActivity("Branch Created", "branches", branch.id);
+    return branch;
+  }
   const { data, error } = await supabase
     .from("branches")
     .insert({
@@ -388,7 +463,21 @@ export async function createBranch(input: BranchInput) {
 }
 
 export async function updateBranch(branchId: string, input: BranchInput) {
-  const supabase = requireSupabase();
+  const supabase = createSupabaseServerClient();
+  if (!supabase) {
+    const state = demoState();
+    let updated: AdminBranch | undefined;
+    state.branches = state.branches
+      .map((branch) => {
+        if (branch.id !== branchId) return branch;
+        updated = { ...input, id: branchId, updatedAt: now() };
+        return updated;
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
+    if (!updated) throw new Error("Branch not found.");
+    await logActivity("Branch Updated", "branches", branchId);
+    return updated;
+  }
   const { data, error } = await supabase
     .from("branches")
     .update({
@@ -410,7 +499,14 @@ export async function updateBranch(branchId: string, input: BranchInput) {
 
 export async function logActivity(action: string, entity: string, entityId: string) {
   const supabase = createSupabaseServerClient();
-  if (!supabase) return;
+  if (!supabase) {
+    const state = demoState();
+    state.activityLogs = [
+      { id: id("activity"), action, user: "Robot Cafe Admin", entity, entityId, timestamp: now() },
+      ...state.activityLogs,
+    ].slice(0, 50);
+    return;
+  }
   await supabase.from("activity_logs").insert({
     action,
     entity,

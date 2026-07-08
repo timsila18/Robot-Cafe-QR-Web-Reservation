@@ -2,9 +2,13 @@ import { BranchCard } from "@/components/branch-card";
 import { Footer } from "@/components/footer";
 import { HeroSection } from "@/components/hero-section";
 import { PublicLayout } from "@/components/public-layout";
-import { branches } from "@/lib/demo-data";
+import { listAdminState } from "@/lib/admin-store";
 
-export default function MenuLandingPage() {
+export const dynamic = "force-dynamic";
+
+export default async function MenuLandingPage() {
+  const { branches } = await listAdminState();
+
   return (
     <PublicLayout>
       <HeroSection
@@ -25,8 +29,8 @@ export default function MenuLandingPage() {
           </p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
-          {branches.map((branch) => (
-            <BranchCard branch={branch} key={branch.id} />
+          {branches.filter((branch) => branch.isActive).map((branch) => (
+            <BranchCard branch={{ ...branch, createdAt: branch.updatedAt }} key={branch.id} />
           ))}
         </div>
       </section>
