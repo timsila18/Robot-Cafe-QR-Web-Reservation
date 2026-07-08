@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { fail, ok } from "@/lib/api-response";
 import { logActivity } from "@/lib/admin-store";
+import { listAdminUsers } from "@/lib/rbac";
 import { adminLoginSchema } from "@/lib/validation";
 
 const ADMIN_COOKIE = "robot_admin_session";
@@ -13,6 +14,9 @@ export async function POST(request: Request) {
     const allowedCredentials = [
       { email: "admin@robotcafe.co.ke", password: "RobotCafe@2026" },
       configuredEmail && configuredPassword ? { email: configuredEmail, password: configuredPassword } : null,
+      ...listAdminUsers()
+        .filter((user) => user.status === "active")
+        .map((user) => ({ email: user.email, password: "RobotCafe@2026" })),
     ].filter(Boolean) as { email: string; password: string }[];
 
     const isAllowed = allowedCredentials.some(
