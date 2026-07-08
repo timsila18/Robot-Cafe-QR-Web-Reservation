@@ -1,6 +1,8 @@
 import { listAdminState } from "@/lib/admin-store";
 import { ok } from "@/lib/api-response";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const state = await listAdminState();
   const activeItems = state.menuItems.filter((item) => item.isActive);
