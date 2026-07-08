@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useMemo, useState } from "react";
 import type { AdminBranch, AdminCategory, AdminImage, AdminMenuItem } from "@/lib/admin-store";
 import { compressImage } from "@/lib/images/image-compression";
+import { canUseDemoPersistence, readDemoBranches, readDemoCategories, readDemoMenuItems, saveDemoMenuItems } from "@/lib/demo-persistence";
 import { deleteImage, replaceImage, uploadImage } from "@/lib/images/image-storage";
 import type { UploadProgress } from "@/lib/images/image-types";
 import { maxImagesPerItem, validateImageCount, validateImageFile } from "@/lib/images/image-validation";
@@ -48,7 +49,9 @@ const emptyItem = (categories: AdminCategory[], branches: AdminBranch[]): AdminM
 });
 
 export function AdminMenuManager({ initialItems, categories, branches }: AdminMenuManagerProps) {
-  const [items, setItems] = useState(initialItems);
+  const [items, setItems] = useState(() => readDemoMenuItems(initialItems));
+  const [availableCategories] = useState(() => readDemoCategories(categories));
+  const [availableBranches] = useState(() => readDemoBranches(branches));
   const [query, setQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -63,7 +66,7 @@ export function AdminMenuManager({ initialItems, categories, branches }: AdminMe
     const cleanQuery = query.trim().toLowerCase();
     return items
       .filter((item) => {
-        const category = categories.find((entry) => entry.id === item.categoryId);
+        const category = availableCategories.find((entry) => entry.id === item.categoryId);
         const matchesQuery =
           !cleanQuery ||
           item.name.toLowerCase().includes(cleanQuery) ||
@@ -84,7 +87,7 @@ export function AdminMenuManager({ initialItems, categories, branches }: AdminMe
         if (sortBy === "display") return a.displayOrder - b.displayOrder;
         return b.updatedAt.localeCompare(a.updatedAt);
       });
-  }, [categoryFilter, categories, items, query, sortBy, statusFilter]);
+  }, [availableCategories, categoryFilter, items, query, sortBy, statusFilter]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
   const visible = filtered.slice((page - 1) * pageSize, page * pageSize);
@@ -92,6 +95,25 @@ export function AdminMenuManager({ initialItems, categories, branches }: AdminMe
   const notify = (message: string) => {
     setToast(message);
     window.setTimeout(() => setToast(""), 2600);
+  };
+
+  const persistItems = (nextItems: AdminMenuItem[]) => {
+    setItems(nextItems);
+    saveDemoMenuItems(nextItems);
+  };
+
+  const saveDemoItem = (item: AdminMenuItem, message?: string) => {
+    const isNew = !item.id;
+    const savedItem = {
+      ...item,
+      id: isNew ? uniqueItemId(items, item.slug || item.name) : item.id,
+      slug: slugify(item.slug || item.name),
+      updatedAt: new Date().toISOString(),
+    };
+    const nextItems = isNew ? [savedItem, ...items] : items.map((entry) => (entry.id === item.id ? savedItem : entry));
+    persistItems(nextItems);
+    setEditing(null);
+    notify(message ?? (isNew ? "Menu item created in demo storage." : "Menu item updated in demo storage."));
   };
 
   const saveItem = async (item: AdminMenuItem) => {
@@ -110,11 +132,15 @@ export function AdminMenuManager({ initialItems, categories, branches }: AdminMe
     const result = await response.json();
 
     if (!response.ok) {
+      if (canUseDemoPersistence(result.error)) {
+        saveDemoItem(item, `${isNew ? "Created" : "Saved"} locally for this Vercel demo.`);
+        return;
+      }
       notify(result.error ?? "Unable to save item.");
       return;
     }
 
-    setItems((current) => (isNew ? [result.data, ...current] : current.map((entry) => (entry.id === item.id ? result.data : entry))));
+    persistItems(isNew ? [result.data, ...items] : items.map((entry) => (entry.id === item.id ? result.data : entry)));
     setEditing(null);
     notify(isNew ? "Menu item created." : "Menu item updated.");
   };
@@ -124,10 +150,15 @@ export function AdminMenuManager({ initialItems, categories, branches }: AdminMe
     const response = await fetch(`/api/admin/menu-items/${itemId}`, { method: "DELETE" });
     const result = await response.json();
     if (!response.ok) {
+      if (canUseDemoPersistence(result.error)) {
+        persistItems(items.filter((item) => item.id !== itemId));
+        notify("Menu item deleted locally for this Vercel demo.");
+        return;
+      }
       notify(result.error ?? "Unable to delete menu item.");
       return;
     }
-    setItems((current) => current.filter((item) => item.id !== itemId));
+    persistItems(items.filter((item) => item.id !== itemId));
     notify("Menu item deleted.");
   };
 
@@ -142,10 +173,14 @@ export function AdminMenuManager({ initialItems, categories, branches }: AdminMe
     });
     const result = await response.json();
     if (!response.ok) {
+      if (canUseDemoPersistence(result.error)) {
+        saveDemoItem(nextItem, message);
+        return;
+      }
       notify(result.error ?? "Unable to update item.");
       return;
     }
-    setItems((current) => current.map((item) => (item.id === itemId ? result.data : item)));
+    persistItems(items.map((item) => (item.id === itemId ? result.data : item)));
     notify(message);
   };
 
@@ -175,7 +210,7 @@ export function AdminMenuManager({ initialItems, categories, branches }: AdminMe
           <h2 className="text-3xl font-semibold text-slate-950">Menu Management</h2>
           <p className="mt-2 text-sm text-slate-500">Create, edit, publish, and control branch visibility for every menu item.</p>
         </div>
-        <button className="premium-button" type="button" onClick={() => setEditing(emptyItem(categories, branches))}>
+        <button className="premium-button" type="button" onClick={() => setEditing(emptyItem(availableCategories, availableBranches))}>
           Create Item
         </button>
       </section>
@@ -184,7 +219,7 @@ export function AdminMenuManager({ initialItems, categories, branches }: AdminMe
         <input className="h-12 rounded-xl border border-slate-200 px-4 outline-none focus:border-gold" placeholder="Search menu items" value={query} onChange={(event) => { setQuery(event.target.value); setPage(1); }} />
         <select className="h-12 rounded-xl border border-slate-200 px-4" value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)}>
           <option value="all">All categories</option>
-          {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
+          {availableCategories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
         </select>
         <select className="h-12 rounded-xl border border-slate-200 px-4" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
           <option value="all">All statuses</option>
@@ -210,7 +245,7 @@ export function AdminMenuManager({ initialItems, categories, branches }: AdminMe
 
       {view === "table" ? (
         <MenuTable
-          categories={categories}
+          categories={availableCategories}
           duplicate={duplicate}
           items={visible}
           patchItem={patchItem}
@@ -222,7 +257,7 @@ export function AdminMenuManager({ initialItems, categories, branches }: AdminMe
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {visible.map((item) => (
-            <MenuCard key={item.id} categories={categories} duplicate={duplicate} item={item} patchItem={patchItem} removeItem={removeItem} setEditing={setEditing} />
+            <MenuCard key={item.id} categories={availableCategories} duplicate={duplicate} item={item} patchItem={patchItem} removeItem={removeItem} setEditing={setEditing} />
           ))}
         </div>
       )}
@@ -235,7 +270,7 @@ export function AdminMenuManager({ initialItems, categories, branches }: AdminMe
         </div>
       </div>
 
-      {editing ? <MenuItemEditor branches={branches} categories={categories} item={editing} onClose={() => setEditing(null)} onSave={saveItem} /> : null}
+      {editing ? <MenuItemEditor branches={availableBranches} categories={availableCategories} item={editing} onClose={() => setEditing(null)} onSave={saveItem} /> : null}
     </div>
   );
 }
@@ -658,6 +693,12 @@ function Field({ label, value, onChange, type = "text" }: { label: string; value
       <input className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4 outline-none focus:border-gold" type={type} value={value} onChange={(event) => onChange(event.target.value)} />
     </label>
   );
+}
+
+function uniqueItemId(items: AdminMenuItem[], value: string) {
+  const base = `item-${slugify(value) || "new"}`;
+  if (!items.some((item) => item.id === base)) return base;
+  return `${base}-${items.length + 1}`;
 }
 
 function reorder<T>(items: T[], from: number, to: number) {

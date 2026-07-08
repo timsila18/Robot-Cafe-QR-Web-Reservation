@@ -8,7 +8,7 @@ import { MenuGrid } from "@/components/menu-grid";
 import { MenuItemModal } from "@/components/menu-item-modal";
 import { SearchBar } from "@/components/search-bar";
 import type { Branch, Category, MenuItem } from "@/lib/demo-data";
-import { getCategoryById } from "@/lib/demo-data";
+import { readDemoCategories, readDemoMenuItems, toPublicCategories, toPublicMenuItems } from "@/lib/demo-persistence";
 
 type MenuExperienceProps = {
   branch: Branch;
@@ -17,6 +17,14 @@ type MenuExperienceProps = {
 };
 
 export function MenuExperience({ branch, categories, items }: MenuExperienceProps) {
+  const [activeCategories] = useState(() => {
+    const savedCategories = readDemoCategories([]);
+    return savedCategories.length ? toPublicCategories(savedCategories).filter((category) => category.isActive) : categories;
+  });
+  const [activeItems] = useState(() => {
+    const savedItems = readDemoMenuItems([]);
+    return savedItems.length ? toPublicMenuItems(savedItems).filter((item) => item.isActive && item.availableBranches.includes(branch.slug)) : items;
+  });
   const [query, setQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("featured");
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
@@ -67,13 +75,13 @@ export function MenuExperience({ branch, categories, items }: MenuExperienceProp
     });
 
     return () => observer.disconnect();
-  }, [categories]);
+  }, [activeCategories]);
 
   const filteredItems = useMemo(() => {
     const cleanQuery = query.trim().toLowerCase();
 
-    return items.filter((item) => {
-      const category = getCategoryById(item.categoryId);
+    return activeItems.filter((item) => {
+      const category = activeCategories.find((entry) => entry.id === item.categoryId);
       const matchesCategory =
         selectedCategory === "all" ||
         (selectedCategory === "featured" && item.isFeatured) ||
@@ -87,7 +95,7 @@ export function MenuExperience({ branch, categories, items }: MenuExperienceProp
 
       return matchesCategory && matchesQuery;
     });
-  }, [items, query, selectedCategory]);
+  }, [activeCategories, activeItems, query, selectedCategory]);
 
   const handleCategory = (categoryId: string) => {
     setIsLoading(true);
@@ -113,17 +121,17 @@ export function MenuExperience({ branch, categories, items }: MenuExperienceProp
   };
 
   const sections = [
-    ["Featured Items", items.filter((item) => item.isFeatured)],
-    ["Best Sellers", items.filter((item) => item.isBestSeller)],
-    ["New Arrivals", items.filter((item) => item.isNewArrival)],
-    ["Chef Recommendations", items.filter((item) => item.isFeatured || item.isBestSeller).slice(0, 6)],
-    ["Popular This Week", [...items].sort((a, b) => Number(b.isBestSeller) - Number(a.isBestSeller)).slice(0, 6)],
-    ["Recently Added", [...items].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, 6)],
+    ["Featured Items", activeItems.filter((item) => item.isFeatured)],
+    ["Best Sellers", activeItems.filter((item) => item.isBestSeller)],
+    ["New Arrivals", activeItems.filter((item) => item.isNewArrival)],
+    ["Chef Recommendations", activeItems.filter((item) => item.isFeatured || item.isBestSeller).slice(0, 6)],
+    ["Popular This Week", [...activeItems].sort((a, b) => Number(b.isBestSeller) - Number(a.isBestSeller)).slice(0, 6)],
+    ["Recently Added", [...activeItems].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, 6)],
   ].filter(([, sectionItems]) => Array.isArray(sectionItems) && sectionItems.length > 0) as [string, MenuItem[]][];
 
   const suggestions = query.trim()
     ? filteredItems.slice(0, 5).map((item) => item.name)
-    : items.filter((item) => item.isBestSeller || item.isFeatured).slice(0, 5).map((item) => item.name);
+    : activeItems.filter((item) => item.isBestSeller || item.isFeatured).slice(0, 5).map((item) => item.name);
 
   return (
     <>
@@ -151,7 +159,7 @@ export function MenuExperience({ branch, categories, items }: MenuExperienceProp
         </div>
 
         <div className="sticky top-20 z-30 mt-8 w-[calc(100vw-2.5rem)] min-w-0 max-w-full rounded-2xl border border-white/10 bg-[#04101c]/88 px-3 shadow-[0_16px_45px_rgba(0,0,0,.24)] backdrop-blur-xl sm:w-full">
-          <CategoryFilter categories={categories} selectedCategory={selectedCategory} onSelect={handleCategory} />
+          <CategoryFilter categories={activeCategories} selectedCategory={selectedCategory} onSelect={handleCategory} />
         </div>
 
         {query.trim().length === 0 && selectedCategory === "featured" ? (
@@ -184,8 +192,8 @@ export function MenuExperience({ branch, categories, items }: MenuExperienceProp
         </div>
 
         <div className="mt-12 space-y-10">
-          {categories.map((category) => {
-            const categoryItems = items.filter((item) => item.categoryId === category.id);
+          {activeCategories.map((category) => {
+            const categoryItems = activeItems.filter((item) => item.categoryId === category.id);
             if (!categoryItems.length) return null;
             return (
               <section id={`category-${category.id}`} key={category.id} ref={(element) => { categoryRefs.current[category.id] = element; }} className="scroll-mt-40">

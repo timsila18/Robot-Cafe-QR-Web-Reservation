@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import type { AdminBranch } from "@/lib/admin-store";
-
-const branchStorageKey = "robot-cafe-admin-branches";
+import { canUseDemoPersistence, readDemoBranches, saveDemoBranches } from "@/lib/demo-persistence";
 
 const slugify = (value: string) =>
   value
@@ -25,7 +24,7 @@ const emptyBranch = (): AdminBranch => ({
 });
 
 export function AdminBranchManager({ initialBranches }: { initialBranches: AdminBranch[] }) {
-  const [branches, setBranches] = useState(() => readSavedBranches(initialBranches));
+  const [branches, setBranches] = useState(() => readDemoBranches(initialBranches));
   const [editing, setEditing] = useState<AdminBranch | null>(null);
   const [toast, setToast] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -37,7 +36,7 @@ export function AdminBranchManager({ initialBranches }: { initialBranches: Admin
 
   const persistBranches = (nextBranches: AdminBranch[]) => {
     setBranches(nextBranches);
-    saveBranches(nextBranches);
+    saveDemoBranches(nextBranches);
   };
 
   const saveDemoBranch = (branch: AdminBranch, message?: string) => {
@@ -65,7 +64,7 @@ export function AdminBranchManager({ initialBranches }: { initialBranches: Admin
       });
       const payload = await response.json();
       if (!response.ok) {
-        if (canUseDemoBranchStorage(payload.error)) {
+        if (canUseDemoPersistence(payload.error)) {
           saveDemoBranch(branch, `${isNew ? "Created" : "Saved"} locally for this Vercel demo.`);
           return;
         }
@@ -173,33 +172,8 @@ function BranchEditor({
   );
 }
 
-function canUseDemoBranchStorage(error: unknown) {
-  const message = String(error ?? "").toLowerCase();
-  return message.includes("database persistence is not configured") || message.includes("invalid input syntax for type uuid");
-}
-
 function uniqueBranchId(branches: AdminBranch[], value: string) {
   const base = `branch-${slugify(value) || "new"}`;
   if (!branches.some((branch) => branch.id === base)) return base;
   return `${base}-${branches.length + 1}`;
-}
-
-function readSavedBranches(fallback: AdminBranch[]) {
-  if (typeof window === "undefined") return fallback;
-  try {
-    const raw = window.localStorage.getItem(branchStorageKey);
-    if (!raw) return fallback;
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) && parsed.length ? (parsed as AdminBranch[]) : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function saveBranches(branches: AdminBranch[]) {
-  try {
-    window.localStorage.setItem(branchStorageKey, JSON.stringify(branches));
-  } catch {
-    // Demo persistence is a convenience layer; the API path remains the production source of truth.
-  }
 }

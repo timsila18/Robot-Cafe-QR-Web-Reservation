@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { AdminCategory, AdminMenuItem } from "@/lib/admin-store";
+import { canUseDemoPersistence, readDemoCategories, saveDemoCategories } from "@/lib/demo-persistence";
 
 const slugify = (value: string) =>
   value
@@ -17,7 +18,7 @@ export function AdminCategoryManager({
   initialCategories: AdminCategory[];
   menuItems: AdminMenuItem[];
 }) {
-  const [categories, setCategories] = useState(initialCategories);
+  const [categories, setCategories] = useState(() => readDemoCategories(initialCategories));
   const [query, setQuery] = useState("");
   const [editing, setEditing] = useState<AdminCategory | null>(null);
   const [toast, setToast] = useState("");
@@ -32,6 +33,25 @@ export function AdminCategoryManager({
     window.setTimeout(() => setToast(""), 2400);
   };
 
+  const persistCategories = (nextCategories: AdminCategory[]) => {
+    setCategories(nextCategories);
+    saveDemoCategories(nextCategories);
+  };
+
+  const saveDemoCategory = (category: AdminCategory, message?: string) => {
+    const isNew = !category.id;
+    const savedCategory = {
+      ...category,
+      id: isNew ? uniqueCategoryId(categories, category.slug || category.name) : category.id,
+      slug: slugify(category.slug || category.name),
+      updatedAt: new Date().toISOString(),
+    };
+    const nextCategories = isNew ? [savedCategory, ...categories] : categories.map((item) => (item.id === category.id ? savedCategory : item));
+    persistCategories(nextCategories);
+    setEditing(null);
+    notify(message ?? (isNew ? "Category created in demo storage." : "Category updated in demo storage."));
+  };
+
   const save = async (category: AdminCategory) => {
     const isNew = !category.id;
     const response = await fetch(isNew ? "/api/admin/categories" : `/api/admin/categories/${category.id}`, {
@@ -42,11 +62,15 @@ export function AdminCategoryManager({
     const payload = await response.json();
 
     if (!response.ok) {
+      if (canUseDemoPersistence(payload.error)) {
+        saveDemoCategory(category, `${isNew ? "Created" : "Saved"} locally for this Vercel demo.`);
+        return;
+      }
       notify(payload.error ?? "Unable to save category.");
       return;
     }
 
-    setCategories((current) => (isNew ? [payload.data, ...current] : current.map((item) => (item.id === category.id ? payload.data : item))));
+    persistCategories(isNew ? [payload.data, ...categories] : categories.map((item) => (item.id === category.id ? payload.data : item)));
     setEditing(null);
     notify(isNew ? "Category created." : "Category updated.");
   };
@@ -61,10 +85,15 @@ export function AdminCategoryManager({
     const response = await fetch(`/api/admin/categories/${category.id}`, { method: "DELETE" });
     const payload = await response.json();
     if (!response.ok) {
+      if (canUseDemoPersistence(payload.error)) {
+        persistCategories(categories.filter((item) => item.id !== category.id));
+        notify("Category deleted locally for this Vercel demo.");
+        return;
+      }
       notify(payload.error ?? "Unable to delete category.");
       return;
     }
-    setCategories((current) => current.filter((item) => item.id !== category.id));
+    persistCategories(categories.filter((item) => item.id !== category.id));
     notify("Category deleted.");
   };
 
@@ -102,6 +131,12 @@ export function AdminCategoryManager({
       {editing ? <CategoryEditor category={editing} onClose={() => setEditing(null)} onSave={save} /> : null}
     </div>
   );
+}
+
+function uniqueCategoryId(categories: AdminCategory[], value: string) {
+  const base = `category-${slugify(value) || "new"}`;
+  if (!categories.some((category) => category.id === base)) return base;
+  return `${base}-${categories.length + 1}`;
 }
 
 function CategoryEditor({ category, onClose, onSave }: { category: AdminCategory; onClose: () => void; onSave: (category: AdminCategory) => void }) {
