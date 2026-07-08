@@ -108,19 +108,22 @@ function CategoryEditor({ category, onClose, onSave }: { category: AdminCategory
   const [draft, setDraft] = useState(category);
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/40 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-xl rounded-2xl bg-white p-6 shadow-2xl">
-        <h3 className="text-2xl font-semibold text-slate-950">{draft.id ? "Edit Category" : "Create Category"}</h3>
-        <div className="mt-5 space-y-4">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/60 p-3 backdrop-blur-sm sm:p-6">
+      <div className="mx-auto flex min-h-full w-full max-w-xl items-start sm:items-center">
+        <div className="my-4 max-h-[calc(100svh-2rem)] w-full overflow-y-auto rounded-2xl border border-gold/20 bg-[#06111f] p-5 text-white shadow-2xl sm:my-8 sm:max-h-[calc(100svh-4rem)] sm:p-6">
+          <h3 className="text-2xl font-semibold text-white">{draft.id ? "Edit Category" : "Create Category"}</h3>
+          <p className="mt-2 text-sm text-[#9fb3c8]">Add a clean category that will persist in the admin menu once saved.</p>
+          <div className="mt-5 space-y-4">
           <input className="h-12 w-full rounded-xl border border-slate-200 px-4" placeholder="Name" value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value, slug: slugify(event.target.value) })} />
           <input className="h-12 w-full rounded-xl border border-slate-200 px-4" placeholder="Slug" value={draft.slug} onChange={(event) => setDraft({ ...draft, slug: slugify(event.target.value) })} />
           <textarea className="min-h-24 w-full rounded-xl border border-slate-200 p-4" placeholder="Description" value={draft.description} onChange={(event) => setDraft({ ...draft, description: event.target.value })} />
           <input className="h-12 w-full rounded-xl border border-slate-200 px-4" type="number" value={draft.sortOrder} onChange={(event) => setDraft({ ...draft, sortOrder: Number(event.target.value) })} />
-          <label className="flex items-center gap-3 text-sm text-slate-700"><input checked={draft.isActive} type="checkbox" onChange={(event) => setDraft({ ...draft, isActive: event.target.checked })} /> Active</label>
-        </div>
-        <div className="mt-6 flex justify-end gap-3">
-          <button className="ghost-button" type="button" onClick={onClose}>Cancel</button>
-          <button className="premium-button" type="button" onClick={() => onSave(draft)}>Save Category</button>
+          <label className="flex items-center gap-3 text-sm text-[#d7e7f8]"><input checked={draft.isActive} type="checkbox" onChange={(event) => setDraft({ ...draft, isActive: event.target.checked })} /> Active</label>
+          </div>
+          <div className="sticky bottom-0 -mx-5 mt-6 flex flex-col-reverse gap-3 border-t border-white/10 bg-[#06111f]/95 px-5 pb-1 pt-4 backdrop-blur sm:-mx-6 sm:flex-row sm:justify-end sm:px-6">
+            <button className="ghost-button" type="button" onClick={onClose}>Cancel</button>
+            <button className="premium-button" type="button" onClick={() => onSave(draft)}>Save Category</button>
+          </div>
         </div>
       </div>
     </div>
