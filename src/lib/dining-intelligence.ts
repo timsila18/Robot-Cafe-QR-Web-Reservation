@@ -1,4 +1,4 @@
-import { branches, categories, getCategoryById, menuItems } from "@/lib/demo-data";
+import { branches, categories, menuItems } from "@/lib/demo-data";
 
 export type FeedbackRecord = {
   id: string;
@@ -33,75 +33,11 @@ export type QrScanRecord = {
   createdAt: string;
 };
 
-const now = new Date();
-const isoHoursAgo = (hours: number) => new Date(now.getTime() - hours * 60 * 60 * 1000).toISOString();
 const id = (prefix: string) => `${prefix}-${crypto.randomUUID()}`;
 
-let feedbackStore: FeedbackRecord[] = [
-  {
-    id: "feedback-1",
-    name: "Ali R.",
-    phone: "+254700000111",
-    email: "ali@example.com",
-    branchId: "branch-imaara",
-    foodRating: 5,
-    serviceRating: 5,
-    ambienceRating: 4,
-    overallRating: 5,
-    comment: "The premium photo menu made choosing dinner easy.",
-    status: "new",
-    createdAt: isoHoursAgo(2),
-  },
-  {
-    id: "feedback-2",
-    name: "Sara K.",
-    phone: "+254700000222",
-    branchId: "branch-lana",
-    foodRating: 4,
-    serviceRating: 5,
-    ambienceRating: 5,
-    overallRating: 5,
-    comment: "Loved the coffee discovery and branch menu speed.",
-    status: "reviewed",
-    createdAt: isoHoursAgo(8),
-    reviewedAt: isoHoursAgo(5),
-  },
-  {
-    id: "feedback-3",
-    name: "Zainab M.",
-    phone: "+254700000333",
-    email: "",
-    branchId: "branch-imaara",
-    foodRating: 5,
-    serviceRating: 4,
-    ambienceRating: 5,
-    overallRating: 4,
-    comment: "Would like table ordering when it is ready.",
-    status: "new",
-    createdAt: isoHoursAgo(18),
-  },
-];
+let feedbackStore: FeedbackRecord[] = [];
 
-let qrScanStore: QrScanRecord[] = Array.from({ length: 42 }, (_, index) => {
-  const branch = branches[index % branches.length];
-  const item = menuItems[index % menuItems.length];
-  const category = getCategoryById(item.categoryId);
-  return {
-    id: `scan-${index + 1}`,
-    branchId: branch.id,
-    route: `/menu/${branch.slug}`,
-    page: `/menu/${branch.slug}`,
-    deviceType: index % 3 === 0 ? "desktop" : "mobile",
-    browser: index % 4 === 0 ? "Safari" : index % 4 === 1 ? "Chrome" : index % 4 === 2 ? "Edge" : "Firefox",
-    os: index % 3 === 0 ? "Windows" : index % 3 === 1 ? "Android" : "iOS",
-    sessionId: `demo-session-${Math.floor(index / 2)}`,
-    referrer: index % 5 === 0 ? "instagram.com" : "",
-    itemId: item.id,
-    categoryId: category?.id,
-    searchQuery: index % 6 === 0 ? category?.name : undefined,
-    createdAt: isoHoursAgo(index * 3),
-  };
-});
+let qrScanStore: QrScanRecord[] = [];
 
 export function createFeedback(input: Omit<FeedbackRecord, "id" | "createdAt" | "status">) {
   const feedback: FeedbackRecord = {

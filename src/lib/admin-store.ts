@@ -1,0 +1,401 @@
+import { branches } from "@/lib/demo-data";
+import type { ManagedImage } from "@/lib/images/image-types";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import type { BranchInput, CategoryInput, MenuItemInput } from "@/lib/validation";
+
+export type AdminImage = ManagedImage;
+
+export type AdminMenuItem = MenuItemInput & {
+  id: string;
+  updatedAt: string;
+  archivedAt?: string;
+};
+
+export type AdminCategory = CategoryInput & {
+  id: string;
+  updatedAt: string;
+};
+
+export type AdminBranch = BranchInput & {
+  updatedAt: string;
+};
+
+export type ActivityLog = {
+  id: string;
+  action: string;
+  user: string;
+  entity: string;
+  entityId: string;
+  timestamp: string;
+};
+
+type AdminState = {
+  menuItems: AdminMenuItem[];
+  categories: AdminCategory[];
+  branches: AdminBranch[];
+  activityLogs: ActivityLog[];
+  feedbackCount: number;
+  qrScans: number;
+};
+
+const now = () => new Date().toISOString();
+
+const fallbackBranches: AdminBranch[] = branches.map((branch) => ({
+  id: branch.id,
+  name: branch.name,
+  slug: branch.slug,
+  location: branch.location,
+  phone: branch.phone,
+  email: branch.email,
+  openingHours: "8:00 AM - 10:00 PM",
+  isActive: branch.isActive,
+  updatedAt: branch.updatedAt,
+}));
+
+const emptyAdminState = (): AdminState => ({
+  menuItems: [],
+  categories: [],
+  branches: fallbackBranches,
+  activityLogs: [],
+  feedbackCount: 0,
+  qrScans: 0,
+});
+
+const requireSupabase = () => {
+  const supabase = createSupabaseServerClient();
+  if (!supabase) {
+    throw new Error("Database persistence is not configured. Add Supabase environment variables before saving admin changes.");
+  }
+  return supabase;
+};
+
+const toBranch = (row: Record<string, unknown>): AdminBranch => {
+  const openingHours = row.opening_hours as Record<string, unknown> | null;
+  return {
+    id: String(row.id),
+    name: String(row.name),
+    slug: String(row.slug),
+    location: String(row.location),
+    phone: String(row.phone ?? ""),
+    email: String(row.email ?? ""),
+    openingHours: String(openingHours?.daily ?? "8:00 AM - 10:00 PM"),
+    isActive: Boolean(row.is_active),
+    updatedAt: String(row.updated_at ?? row.created_at ?? now()),
+  };
+};
+
+const toCategory = (row: Record<string, unknown>): AdminCategory => ({
+  id: String(row.id),
+  name: String(row.name),
+  slug: String(row.slug),
+  description: String(row.description ?? ""),
+  sortOrder: Number(row.sort_order ?? 0),
+  isActive: Boolean(row.is_active),
+  updatedAt: String(row.updated_at ?? row.created_at ?? now()),
+});
+
+const toImage = (row: Record<string, unknown>): AdminImage => ({
+  id: String(row.id),
+  imageUrl: String(row.image_url),
+  thumbnailUrl: String(row.thumbnail_url ?? row.image_url),
+  cardUrl: String(row.card_url ?? row.image_url),
+  detailUrl: String(row.detail_url ?? row.image_url),
+  fileName: String(row.file_name ?? "menu-image.webp"),
+  fileSize: Number(row.file_size ?? 0),
+  mimeType: String(row.mime_type ?? "image/webp"),
+  width: Number(row.width ?? 0),
+  height: Number(row.height ?? 0),
+  isPrimary: Boolean(row.is_primary),
+  sortOrder: Number(row.sort_order ?? 0),
+  createdAt: String(row.created_at ?? now()),
+});
+
+const toMenuItem = (row: Record<string, unknown>): AdminMenuItem => {
+  const images = Array.isArray(row.menu_item_images) ? row.menu_item_images.map((image) => toImage(image as Record<string, unknown>)) : [];
+  const availability = Array.isArray(row.menu_item_branch_availability) ? row.menu_item_branch_availability : [];
+  const availableBranches = availability
+    .map((entry) => {
+      const record = entry as Record<string, unknown>;
+      const branch = record.branches as Record<string, unknown> | null;
+      return branch?.slug ? String(branch.slug) : "";
+    })
+    .filter(Boolean);
+
+  return {
+    id: String(row.id),
+    name: String(row.name),
+    slug: String(row.slug),
+    description: String(row.description ?? ""),
+    shortDescription: String(row.short_description ?? row.description ?? ""),
+    price: Number(row.price ?? 0),
+    preparationTime: Number(row.preparation_time ?? 0),
+    ingredients: Array.isArray(row.ingredients) ? row.ingredients.map(String) : [],
+    allergens: Array.isArray(row.allergens) ? row.allergens.map(String) : [],
+    calories: Number(row.calories ?? 0),
+    categoryId: String(row.category_id),
+    isFeatured: Boolean(row.is_featured),
+    isBestSeller: Boolean(row.is_best_seller),
+    isNewArrival: Boolean(row.is_new_arrival),
+    isActive: Boolean(row.is_active),
+    isSoldOut: Boolean(row.is_sold_out),
+    displayOrder: Number(row.display_order ?? 0),
+    availableBranches,
+    images: images.sort((a, b) => a.sortOrder - b.sortOrder),
+    updatedAt: String(row.updated_at ?? row.created_at ?? now()),
+  };
+};
+
+const toActivity = (row: Record<string, unknown>): ActivityLog => ({
+  id: String(row.id),
+  action: String(row.action),
+  user: String(row.user_name ?? "Robot Cafe Admin"),
+  entity: String(row.entity),
+  entityId: String(row.entity_id ?? ""),
+  timestamp: String(row.created_at ?? now()),
+});
+
+export async function listAdminState(): Promise<AdminState> {
+  const supabase = createSupabaseServerClient();
+  if (!supabase) return emptyAdminState();
+
+  const [branchesResult, categoriesResult, menuItemsResult, activityResult, feedbackResult, qrResult] = await Promise.all([
+    supabase.from("branches").select("*").order("name", { ascending: true }),
+    supabase.from("categories").select("*").order("sort_order", { ascending: true }).order("name", { ascending: true }),
+    supabase
+      .from("menu_items")
+      .select("*, menu_item_images(*), menu_item_branch_availability(is_available, branches(slug))")
+      .order("display_order", { ascending: true })
+      .order("updated_at", { ascending: false }),
+    supabase.from("activity_logs").select("*").order("created_at", { ascending: false }).limit(30),
+    supabase.from("feedback").select("id", { count: "exact", head: true }),
+    supabase.from("qr_scans").select("id", { count: "exact", head: true }),
+  ]);
+
+  if (branchesResult.error) throw new Error(`Unable to load branches: ${branchesResult.error.message}`);
+  if (categoriesResult.error) throw new Error(`Unable to load categories: ${categoriesResult.error.message}`);
+  if (menuItemsResult.error) throw new Error(`Unable to load menu items: ${menuItemsResult.error.message}`);
+
+  return {
+    branches: branchesResult.data.map(toBranch),
+    categories: categoriesResult.data.map(toCategory),
+    menuItems: menuItemsResult.data.map(toMenuItem),
+    activityLogs: activityResult.error ? [] : activityResult.data.map(toActivity),
+    feedbackCount: feedbackResult.count ?? 0,
+    qrScans: qrResult.count ?? 0,
+  };
+}
+
+async function syncMenuItemImages(menuItemId: string, images: AdminImage[]) {
+  const supabase = requireSupabase();
+  const { error: deleteError } = await supabase.from("menu_item_images").delete().eq("menu_item_id", menuItemId);
+  if (deleteError) throw new Error(`Unable to replace menu images: ${deleteError.message}`);
+  if (!images.length) return;
+
+  const { error } = await supabase.from("menu_item_images").insert(
+    images.map((image, index) => ({
+      menu_item_id: menuItemId,
+      image_url: image.imageUrl,
+      thumbnail_url: image.thumbnailUrl,
+      card_url: image.cardUrl,
+      detail_url: image.detailUrl,
+      file_name: image.fileName,
+      file_size: image.fileSize,
+      mime_type: image.mimeType,
+      width: image.width,
+      height: image.height,
+      is_primary: image.isPrimary || index === 0,
+      sort_order: index + 1,
+    })),
+  );
+  if (error) throw new Error(`Unable to save menu images: ${error.message}`);
+}
+
+async function syncMenuItemBranches(menuItemId: string, branchSlugs: string[]) {
+  const supabase = requireSupabase();
+  const { data: branchRows, error: branchError } = await supabase.from("branches").select("id, slug").in("slug", branchSlugs);
+  if (branchError) throw new Error(`Unable to validate branches: ${branchError.message}`);
+
+  const foundSlugs = new Set(branchRows.map((branch) => String(branch.slug)));
+  const invalidBranch = branchSlugs.find((slug) => !foundSlugs.has(slug));
+  if (invalidBranch) throw new Error(`Invalid branch assignment: ${invalidBranch}`);
+
+  const { error: deleteError } = await supabase.from("menu_item_branch_availability").delete().eq("menu_item_id", menuItemId);
+  if (deleteError) throw new Error(`Unable to replace branch availability: ${deleteError.message}`);
+  if (!branchRows.length) return;
+
+  const { error } = await supabase.from("menu_item_branch_availability").insert(
+    branchRows.map((branch) => ({
+      menu_item_id: menuItemId,
+      branch_id: branch.id,
+      is_available: true,
+    })),
+  );
+  if (error) throw new Error(`Unable to save branch availability: ${error.message}`);
+}
+
+async function getMenuItem(itemId: string) {
+  const supabase = requireSupabase();
+  const { data, error } = await supabase
+    .from("menu_items")
+    .select("*, menu_item_images(*), menu_item_branch_availability(is_available, branches(slug))")
+    .eq("id", itemId)
+    .single();
+  if (error) throw new Error(`Unable to load saved menu item: ${error.message}`);
+  return toMenuItem(data);
+}
+
+export async function createMenuItem(input: MenuItemInput) {
+  const supabase = requireSupabase();
+  const { data, error } = await supabase
+    .from("menu_items")
+    .insert({
+      name: input.name,
+      slug: input.slug,
+      description: input.description,
+      short_description: input.shortDescription,
+      price: input.price,
+      preparation_time: input.preparationTime,
+      ingredients: input.ingredients,
+      allergens: input.allergens,
+      calories: input.calories,
+      category_id: input.categoryId,
+      is_featured: input.isFeatured,
+      is_best_seller: input.isBestSeller,
+      is_new_arrival: input.isNewArrival,
+      is_active: input.isActive,
+      is_sold_out: input.isSoldOut,
+      display_order: input.displayOrder,
+    })
+    .select("id")
+    .single();
+
+  if (error) throw new Error(`Unable to create menu item: ${error.message}`);
+  await syncMenuItemImages(data.id, input.images);
+  await syncMenuItemBranches(data.id, input.availableBranches);
+  await logActivity("Menu Created", "menu_items", data.id);
+  return getMenuItem(data.id);
+}
+
+export async function updateMenuItem(itemId: string, input: MenuItemInput) {
+  const supabase = requireSupabase();
+  const { error } = await supabase
+    .from("menu_items")
+    .update({
+      name: input.name,
+      slug: input.slug,
+      description: input.description,
+      short_description: input.shortDescription,
+      price: input.price,
+      preparation_time: input.preparationTime,
+      ingredients: input.ingredients,
+      allergens: input.allergens,
+      calories: input.calories,
+      category_id: input.categoryId,
+      is_featured: input.isFeatured,
+      is_best_seller: input.isBestSeller,
+      is_new_arrival: input.isNewArrival,
+      is_active: input.isActive,
+      is_sold_out: input.isSoldOut,
+      display_order: input.displayOrder,
+    })
+    .eq("id", itemId);
+
+  if (error) throw new Error(`Unable to update menu item: ${error.message}`);
+  await syncMenuItemImages(itemId, input.images);
+  await syncMenuItemBranches(itemId, input.availableBranches);
+  await logActivity("Menu Updated", "menu_items", itemId);
+  return getMenuItem(itemId);
+}
+
+export async function deleteMenuItem(itemId: string) {
+  const existing = await getMenuItem(itemId);
+  const supabase = requireSupabase();
+  const { error } = await supabase.from("menu_items").delete().eq("id", itemId);
+  if (error) throw new Error(`Unable to delete menu item: ${error.message}`);
+  await logActivity("Menu Deleted", "menu_items", itemId);
+  return existing;
+}
+
+export async function createCategory(input: CategoryInput) {
+  const supabase = requireSupabase();
+  const { data, error } = await supabase
+    .from("categories")
+    .insert({
+      name: input.name,
+      slug: input.slug,
+      description: input.description,
+      sort_order: input.sortOrder,
+      is_active: input.isActive,
+    })
+    .select("*")
+    .single();
+  if (error) throw new Error(`Unable to create category: ${error.message}`);
+  await logActivity("Category Created", "categories", data.id);
+  return toCategory(data);
+}
+
+export async function updateCategory(categoryId: string, input: CategoryInput) {
+  const supabase = requireSupabase();
+  const { data, error } = await supabase
+    .from("categories")
+    .update({
+      name: input.name,
+      slug: input.slug,
+      description: input.description,
+      sort_order: input.sortOrder,
+      is_active: input.isActive,
+    })
+    .eq("id", categoryId)
+    .select("*")
+    .single();
+  if (error) throw new Error(`Unable to update category: ${error.message}`);
+  await logActivity("Category Updated", "categories", categoryId);
+  return toCategory(data);
+}
+
+export async function deleteCategory(categoryId: string) {
+  const supabase = requireSupabase();
+  const { count, error: countError } = await supabase
+    .from("menu_items")
+    .select("id", { count: "exact", head: true })
+    .eq("category_id", categoryId);
+  if (countError) throw new Error(`Unable to validate category usage: ${countError.message}`);
+  if ((count ?? 0) > 0) throw new Error("This category is referenced by menu items. Deactivate it instead.");
+
+  const { error } = await supabase.from("categories").delete().eq("id", categoryId);
+  if (error) throw new Error(`Unable to delete category: ${error.message}`);
+  await logActivity("Category Deleted", "categories", categoryId);
+}
+
+export async function updateBranch(branchId: string, input: BranchInput) {
+  const supabase = requireSupabase();
+  const { data, error } = await supabase
+    .from("branches")
+    .update({
+      name: input.name,
+      slug: input.slug,
+      location: input.location,
+      phone: input.phone,
+      email: input.email,
+      opening_hours: { daily: input.openingHours },
+      is_active: input.isActive,
+    })
+    .eq("id", branchId)
+    .select("*")
+    .single();
+  if (error) throw new Error(`Unable to update branch: ${error.message}`);
+  await logActivity("Branch Updated", "branches", branchId);
+  return toBranch(data);
+}
+
+export async function logActivity(action: string, entity: string, entityId: string) {
+  const supabase = createSupabaseServerClient();
+  if (!supabase) return;
+  await supabase.from("activity_logs").insert({
+    action,
+    entity,
+    entity_id: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(entityId) ? entityId : null,
+    user_name: "Robot Cafe Admin",
+    metadata: { entityId },
+  });
+}

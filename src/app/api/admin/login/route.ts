@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { fail, ok } from "@/lib/api-response";
-import { logActivity } from "@/lib/admin-engine";
+import { logActivity } from "@/lib/admin-store";
 import { adminLoginSchema } from "@/lib/validation";
 
 const ADMIN_COOKIE = "robot_admin_session";
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
       maxAge: 60 * 60 * 8,
       path: "/",
     });
-    logActivity("Admin Login", "admin_users", "local-admin");
+    await logActivity("Admin Login", "admin_users", "local-admin");
     return ok({ redirectTo: "/admin" });
   } catch (error) {
     return fail(error, 401);

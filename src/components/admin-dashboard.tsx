@@ -1,9 +1,9 @@
-import { listAdminState } from "@/lib/admin-engine";
+import { listAdminState } from "@/lib/admin-store";
 import { getAnalyticsMetrics, getFeedbackMetrics } from "@/lib/dining-intelligence";
 import { futureDiningFeatures } from "@/lib/feature-flags";
 
-export function AdminDashboard() {
-  const state = listAdminState();
+export async function AdminDashboard() {
+  const state = await listAdminState();
   const feedback = getFeedbackMetrics();
   const analytics = getAnalyticsMetrics();
   const metrics = [

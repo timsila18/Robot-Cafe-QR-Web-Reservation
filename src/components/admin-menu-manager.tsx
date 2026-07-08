@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useMemo, useState } from "react";
-import type { AdminBranch, AdminCategory, AdminImage, AdminMenuItem } from "@/lib/admin-engine";
+import type { AdminBranch, AdminCategory, AdminImage, AdminMenuItem } from "@/lib/admin-store";
 import { compressImage } from "@/lib/images/image-compression";
 import { deleteImage, replaceImage, uploadImage } from "@/lib/images/image-storage";
 import type { UploadProgress } from "@/lib/images/image-types";
@@ -121,32 +121,50 @@ export function AdminMenuManager({ initialItems, categories, branches }: AdminMe
 
   const removeItem = async (itemId: string) => {
     if (!window.confirm("Delete this menu item? This requires confirmation.")) return;
-    await fetch(`/api/admin/menu-items/${itemId}`, { method: "DELETE" });
+    const response = await fetch(`/api/admin/menu-items/${itemId}`, { method: "DELETE" });
+    const result = await response.json();
+    if (!response.ok) {
+      notify(result.error ?? "Unable to delete menu item.");
+      return;
+    }
     setItems((current) => current.filter((item) => item.id !== itemId));
     notify("Menu item deleted.");
   };
 
-  const patchItem = (itemId: string, patch: Partial<AdminMenuItem>, message: string) => {
-    setItems((current) => current.map((item) => (item.id === itemId ? { ...item, ...patch, updatedAt: new Date().toISOString() } : item)));
+  const patchItem = async (itemId: string, patch: Partial<AdminMenuItem>, message: string) => {
+    const currentItem = items.find((item) => item.id === itemId);
+    if (!currentItem) return;
+    const nextItem = { ...currentItem, ...patch, updatedAt: new Date().toISOString() };
+    const response = await fetch(`/api/admin/menu-items/${itemId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...nextItem, id: undefined }),
+    });
+    const result = await response.json();
+    if (!response.ok) {
+      notify(result.error ?? "Unable to update item.");
+      return;
+    }
+    setItems((current) => current.map((item) => (item.id === itemId ? result.data : item)));
     notify(message);
   };
 
-  const duplicate = (item: AdminMenuItem) => {
+  const duplicate = async (item: AdminMenuItem) => {
     const copy = {
       ...item,
-      id: `local-${crypto.randomUUID()}`,
+      id: "",
       name: `${item.name} Copy`,
       slug: `${item.slug}-copy-${Date.now()}`,
       updatedAt: new Date().toISOString(),
     };
-    setItems((current) => [copy, ...current]);
-    notify("Menu item duplicated.");
+    await saveItem(copy);
   };
 
-  const bulk = (patch: Partial<AdminMenuItem>, message: string) => {
-    setItems((current) => current.map((item) => (selected.includes(item.id) ? { ...item, ...patch, updatedAt: new Date().toISOString() } : item)));
+  const bulk = async (patch: Partial<AdminMenuItem>, message: string) => {
+    for (const itemId of selected) {
+      await patchItem(itemId, patch, message);
+    }
     setSelected([]);
-    notify(message);
   };
 
   return (
@@ -185,9 +203,9 @@ export function AdminMenuManager({ initialItems, categories, branches }: AdminMe
       </section>
 
       <section className="flex flex-wrap gap-2">
-        <button className="ghost-button min-h-10 px-3" disabled={!selected.length} type="button" onClick={() => bulk({ isActive: true }, "Selected items activated.")}>Activate</button>
-        <button className="ghost-button min-h-10 px-3" disabled={!selected.length} type="button" onClick={() => bulk({ isActive: false }, "Selected items deactivated.")}>Deactivate</button>
-        <button className="ghost-button min-h-10 px-3" disabled={!selected.length} type="button" onClick={() => bulk({ isSoldOut: true }, "Selected items marked sold out.")}>Sold Out</button>
+        <button className="ghost-button min-h-10 px-3" disabled={!selected.length} type="button" onClick={() => void bulk({ isActive: true }, "Selected items activated.")}>Activate</button>
+        <button className="ghost-button min-h-10 px-3" disabled={!selected.length} type="button" onClick={() => void bulk({ isActive: false }, "Selected items deactivated.")}>Deactivate</button>
+        <button className="ghost-button min-h-10 px-3" disabled={!selected.length} type="button" onClick={() => void bulk({ isSoldOut: true }, "Selected items marked sold out.")}>Sold Out</button>
       </section>
 
       {view === "table" ? (
@@ -228,8 +246,8 @@ function MenuTable(props: {
   selected: string[];
   setSelected: (value: string[]) => void;
   setEditing: (item: AdminMenuItem) => void;
-  patchItem: (itemId: string, patch: Partial<AdminMenuItem>, message: string) => void;
-  duplicate: (item: AdminMenuItem) => void;
+  patchItem: (itemId: string, patch: Partial<AdminMenuItem>, message: string) => Promise<void>;
+  duplicate: (item: AdminMenuItem) => Promise<void>;
   removeItem: (itemId: string) => void;
 }) {
   return (
@@ -267,9 +285,9 @@ function MenuTable(props: {
                 <td className="px-4 py-4">
                   <div className="flex flex-wrap gap-2">
                     <button className="text-gold" type="button" onClick={() => props.setEditing(item)}>Edit</button>
-                    <button className="text-gold" type="button" onClick={() => props.duplicate(item)}>Duplicate</button>
-                    <button className="text-slate-500" type="button" onClick={() => props.patchItem(item.id, { isActive: !item.isActive }, item.isActive ? "Item deactivated." : "Item activated.")}>{item.isActive ? "Deactivate" : "Activate"}</button>
-                    <button className="text-slate-500" type="button" onClick={() => props.patchItem(item.id, { isActive: false, archivedAt: new Date().toISOString() }, "Item archived.")}>Archive</button>
+                    <button className="text-gold" type="button" onClick={() => void props.duplicate(item)}>Duplicate</button>
+                    <button className="text-slate-500" type="button" onClick={() => void props.patchItem(item.id, { isActive: !item.isActive }, item.isActive ? "Item deactivated." : "Item activated.")}>{item.isActive ? "Deactivate" : "Activate"}</button>
+                    <button className="text-slate-500" type="button" onClick={() => void props.patchItem(item.id, { isActive: false, archivedAt: new Date().toISOString() }, "Item archived.")}>Archive</button>
                     <button className="text-red-600" type="button" onClick={() => props.removeItem(item.id)}>Delete</button>
                   </div>
                 </td>
@@ -286,8 +304,8 @@ function MenuCard(props: {
   item: AdminMenuItem;
   categories: AdminCategory[];
   setEditing: (item: AdminMenuItem) => void;
-  patchItem: (itemId: string, patch: Partial<AdminMenuItem>, message: string) => void;
-  duplicate: (item: AdminMenuItem) => void;
+  patchItem: (itemId: string, patch: Partial<AdminMenuItem>, message: string) => Promise<void>;
+  duplicate: (item: AdminMenuItem) => Promise<void>;
   removeItem: (itemId: string) => void;
 }) {
   const primaryImage = props.item.images.find((image) => image.isPrimary) ?? props.item.images[0];
@@ -311,8 +329,8 @@ function MenuCard(props: {
         <p className="mt-4 font-semibold text-gold">KES {props.item.price.toLocaleString()}</p>
         <div className="mt-5 flex flex-wrap gap-2 text-sm">
           <button className="text-gold" type="button" onClick={() => props.setEditing(props.item)}>Edit</button>
-          <button className="text-gold" type="button" onClick={() => props.duplicate(props.item)}>Duplicate</button>
-          <button className="text-slate-500" type="button" onClick={() => props.patchItem(props.item.id, { isSoldOut: !props.item.isSoldOut }, "Availability changed.")}>Toggle Sold Out</button>
+          <button className="text-gold" type="button" onClick={() => void props.duplicate(props.item)}>Duplicate</button>
+          <button className="text-slate-500" type="button" onClick={() => void props.patchItem(props.item.id, { isSoldOut: !props.item.isSoldOut }, "Availability changed.")}>Toggle Sold Out</button>
           <button className="text-red-600" type="button" onClick={() => props.removeItem(props.item.id)}>Delete</button>
         </div>
       </div>

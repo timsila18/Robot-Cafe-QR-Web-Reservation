@@ -1,8 +1,8 @@
-import { listAdminState } from "@/lib/admin-engine";
+import { listAdminState } from "@/lib/admin-store";
 import { ok } from "@/lib/api-response";
 
 export async function GET() {
-  const state = listAdminState();
+  const state = await listAdminState();
   const activeItems = state.menuItems.filter((item) => item.isActive);
   const soldOutItems = state.menuItems.filter((item) => item.isSoldOut);
 

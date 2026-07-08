@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { AdminCategory, AdminMenuItem } from "@/lib/admin-engine";
+import type { AdminCategory, AdminMenuItem } from "@/lib/admin-store";
 
 const slugify = (value: string) =>
   value
@@ -58,7 +58,12 @@ export function AdminCategoryManager({
       return;
     }
     if (!window.confirm("Delete this category?")) return;
-    await fetch(`/api/admin/categories/${category.id}`, { method: "DELETE" });
+    const response = await fetch(`/api/admin/categories/${category.id}`, { method: "DELETE" });
+    const payload = await response.json();
+    if (!response.ok) {
+      notify(payload.error ?? "Unable to delete category.");
+      return;
+    }
     setCategories((current) => current.filter((item) => item.id !== category.id));
     notify("Category deleted.");
   };
@@ -87,7 +92,7 @@ export function AdminCategoryManager({
             <p className="mt-2 text-sm text-slate-500">{category.description}</p>
             <div className="mt-5 flex flex-wrap gap-3 text-sm">
               <button className="text-gold" type="button" onClick={() => setEditing(category)}>Edit</button>
-              <button className="text-slate-500" type="button" onClick={() => setCategories((current) => current.map((item) => item.id === category.id ? { ...item, isActive: !item.isActive } : item))}>{category.isActive ? "Deactivate" : "Activate"}</button>
+              <button className="text-slate-500" type="button" onClick={() => void save({ ...category, isActive: !category.isActive })}>{category.isActive ? "Deactivate" : "Activate"}</button>
               <button className="text-red-600" type="button" onClick={() => remove(category)}>Delete</button>
             </div>
           </article>

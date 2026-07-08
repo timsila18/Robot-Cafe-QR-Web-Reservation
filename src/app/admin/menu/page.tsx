@@ -1,8 +1,8 @@
 import { AdminMenuManager } from "@/components/admin-menu-manager";
-import { listAdminState } from "@/lib/admin-engine";
+import { listAdminState } from "@/lib/admin-store";
 
-export default function AdminMenuPage() {
-  const state = listAdminState();
+export default async function AdminMenuPage() {
+  const state = await listAdminState();
 
   return (
     <AdminMenuManager

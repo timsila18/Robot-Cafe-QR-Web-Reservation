@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { AdminBranch } from "@/lib/admin-engine";
+import type { AdminBranch } from "@/lib/admin-store";
 
 export function AdminBranchManager({ initialBranches }: { initialBranches: AdminBranch[] }) {
   const [branches, setBranches] = useState(initialBranches);

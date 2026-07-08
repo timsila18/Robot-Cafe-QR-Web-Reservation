@@ -1,6 +1,6 @@
-import { listAdminState } from "@/lib/admin-engine";
+import { listAdminState } from "@/lib/admin-store";
 import { ok } from "@/lib/api-response";
 
 export async function GET() {
-  return ok(listAdminState().branches);
+  return ok((await listAdminState()).branches);
 }
