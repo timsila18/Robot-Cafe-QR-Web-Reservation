@@ -367,6 +367,26 @@ export async function deleteCategory(categoryId: string) {
   await logActivity("Category Deleted", "categories", categoryId);
 }
 
+export async function createBranch(input: BranchInput) {
+  const supabase = requireSupabase();
+  const { data, error } = await supabase
+    .from("branches")
+    .insert({
+      name: input.name,
+      slug: input.slug,
+      location: input.location,
+      phone: input.phone,
+      email: input.email,
+      opening_hours: { daily: input.openingHours },
+      is_active: input.isActive,
+    })
+    .select("*")
+    .single();
+  if (error) throw new Error(`Unable to create branch: ${error.message}`);
+  await logActivity("Branch Created", "branches", data.id);
+  return toBranch(data);
+}
+
 export async function updateBranch(branchId: string, input: BranchInput) {
   const supabase = requireSupabase();
   const { data, error } = await supabase

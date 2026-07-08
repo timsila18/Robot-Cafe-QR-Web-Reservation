@@ -8,6 +8,12 @@ export function AdminFeedbackConsole({ initialFeedback, branches }: { initialFee
   const [feedback, setFeedback] = useState(initialFeedback);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("all");
+  const [toast, setToast] = useState("");
+
+  const notify = (message: string) => {
+    setToast(message);
+    window.setTimeout(() => setToast(""), 2400);
+  };
 
   const filtered = useMemo(() => {
     const clean = query.trim().toLowerCase();
@@ -26,19 +32,27 @@ export function AdminFeedbackConsole({ initialFeedback, branches }: { initialFee
   });
 
   const patchStatus = async (feedbackId: string, nextStatus: FeedbackRecord["status"]) => {
-    const response = await fetch(`/api/admin/feedback/${feedbackId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: nextStatus }),
-    });
-    const result = await response.json();
-    if (response.ok) {
+    try {
+      const response = await fetch(`/api/admin/feedback/${feedbackId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: nextStatus }),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        notify(result.error ?? "Unable to update feedback.");
+        return;
+      }
       setFeedback((current) => current.map((entry) => (entry.id === feedbackId ? result.data : entry)));
+      notify(nextStatus === "archived" ? "Feedback archived." : "Feedback marked reviewed.");
+    } catch {
+      notify("Feedback update failed. Please try again.");
     }
   };
 
   return (
     <div className="space-y-6">
+      {toast ? <div className="fixed right-5 top-24 z-50 rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white shadow-2xl">{toast}</div> : null}
       <div>
         <h2 className="text-3xl font-semibold text-slate-950">Feedback Intelligence</h2>
         <p className="mt-3 text-sm text-slate-500">Food, service, ambience, and overall guest signals from Robot Cafe digital dining.</p>

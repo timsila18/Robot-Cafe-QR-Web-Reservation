@@ -54,6 +54,10 @@ export function AdminUsersConsole({ initialUsers }: { initialUsers: AdminUser[] 
       body: JSON.stringify(patchValue),
     });
     const result = await response.json();
+    if (!response.ok) {
+      notify(result.error ?? "Unable to update user.");
+      return;
+    }
     if (response.ok && !("action" in patchValue)) {
       setUsers((current) => current.map((entry) => (entry.id === user.id ? result.data : entry)));
     }

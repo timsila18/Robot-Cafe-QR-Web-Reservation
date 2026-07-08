@@ -3,10 +3,30 @@
 import { useState } from "react";
 import type { AdminBranch } from "@/lib/admin-store";
 
+const slugify = (value: string) =>
+  value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+
+const emptyBranch = (): AdminBranch => ({
+  id: "",
+  name: "",
+  slug: "",
+  location: "",
+  phone: "",
+  email: "",
+  openingHours: "8:00 AM - 10:00 PM",
+  isActive: true,
+  updatedAt: new Date().toISOString(),
+});
+
 export function AdminBranchManager({ initialBranches }: { initialBranches: AdminBranch[] }) {
   const [branches, setBranches] = useState(initialBranches);
   const [editing, setEditing] = useState<AdminBranch | null>(null);
   const [toast, setToast] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   const notify = (message: string) => {
     setToast(message);
@@ -14,27 +34,38 @@ export function AdminBranchManager({ initialBranches }: { initialBranches: Admin
   };
 
   const save = async (branch: AdminBranch) => {
-    const response = await fetch(`/api/admin/branches/${branch.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(branch),
-    });
-    const payload = await response.json();
-    if (!response.ok) {
-      notify(payload.error ?? "Unable to update branch.");
-      return;
+    const isNew = !branch.id;
+    setIsSaving(true);
+    try {
+      const response = await fetch(isNew ? "/api/admin/branches" : `/api/admin/branches/${branch.id}`, {
+        method: isNew ? "POST" : "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(branch),
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        notify(payload.error ?? `Unable to ${isNew ? "create" : "update"} branch.`);
+        return;
+      }
+      setBranches((current) => (isNew ? [payload.data, ...current] : current.map((item) => (item.id === branch.id ? payload.data : item))));
+      setEditing(null);
+      notify(isNew ? "Branch created." : "Branch updated.");
+    } catch {
+      notify("Branch save failed. Please check your connection and try again.");
+    } finally {
+      setIsSaving(false);
     }
-    setBranches((current) => current.map((item) => (item.id === branch.id ? payload.data : item)));
-    setEditing(null);
-    notify("Branch updated.");
   };
 
   return (
     <div className="space-y-6">
       {toast ? <div className="fixed right-5 top-24 z-50 rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white shadow-2xl">{toast}</div> : null}
-      <div>
-        <h2 className="text-3xl font-semibold text-slate-950">Branches</h2>
-        <p className="mt-2 text-sm text-slate-500">Update contacts, hours, locations, and activation state. Branches cannot be deleted.</p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h2 className="text-3xl font-semibold text-slate-950">Branches</h2>
+          <p className="mt-2 text-sm text-slate-500">Create branches and update contacts, hours, locations, routes, and activation state.</p>
+        </div>
+        <button className="premium-button" type="button" onClick={() => setEditing(emptyBranch())}>Add Branch</button>
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
         {branches.map((branch) => (
@@ -50,35 +81,66 @@ export function AdminBranchManager({ initialBranches }: { initialBranches: Admin
             </dl>
             <div className="mt-7 flex gap-3">
               <button className="premium-button" type="button" onClick={() => setEditing(branch)}>Edit Branch</button>
-              <button className="ghost-button" type="button" onClick={() => save({ ...branch, isActive: !branch.isActive })}>{branch.isActive ? "Deactivate" : "Activate"}</button>
+              <button className="ghost-button" disabled={isSaving} type="button" onClick={() => void save({ ...branch, isActive: !branch.isActive })}>{branch.isActive ? "Deactivate" : "Activate"}</button>
             </div>
           </article>
         ))}
       </div>
-      {editing ? <BranchEditor branch={editing} onClose={() => setEditing(null)} onSave={save} /> : null}
+      {editing ? <BranchEditor branch={editing} isSaving={isSaving} onClose={() => setEditing(null)} onSave={save} /> : null}
     </div>
   );
 }
 
-function BranchEditor({ branch, onClose, onSave }: { branch: AdminBranch; onClose: () => void; onSave: (branch: AdminBranch) => void }) {
+function BranchEditor({
+  branch,
+  isSaving,
+  onClose,
+  onSave,
+}: {
+  branch: AdminBranch;
+  isSaving: boolean;
+  onClose: () => void;
+  onSave: (branch: AdminBranch) => void;
+}) {
   const [draft, setDraft] = useState(branch);
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/40 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl">
-        <h3 className="text-2xl font-semibold text-slate-950">Edit Branch</h3>
-        <div className="mt-5 grid gap-4 sm:grid-cols-2">
-          {(["name", "location", "phone", "email", "openingHours"] as const).map((key) => (
-            <label className="text-sm font-medium text-slate-700" key={key}>
-              {key.replace(/([A-Z])/g, " $1")}
-              <input className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4" value={draft[key]} onChange={(event) => setDraft({ ...draft, [key]: event.target.value })} />
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/60 p-3 backdrop-blur-sm sm:p-6">
+      <div className="mx-auto flex min-h-full w-full max-w-2xl items-start sm:items-center">
+        <div className="my-4 max-h-[calc(100svh-2rem)] w-full overflow-y-auto rounded-2xl border border-gold/20 bg-[#06111f] p-5 text-white shadow-2xl sm:my-8 sm:max-h-[calc(100svh-4rem)] sm:p-6">
+          <h3 className="text-2xl font-semibold text-white">{draft.id ? "Edit Branch" : "Add Branch"}</h3>
+          <p className="mt-2 text-sm text-[#9fb3c8]">Branch details power QR routes, reservations, and admin filtering.</p>
+          <div className="mt-5 grid gap-4 sm:grid-cols-2">
+            <label className="text-sm font-medium text-[#d7e7f8]">
+              Name
+              <input className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4" required value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value, slug: draft.slug || slugify(event.target.value) })} />
             </label>
-          ))}
-          <label className="flex items-center gap-3 text-sm text-slate-700"><input checked={draft.isActive} type="checkbox" onChange={(event) => setDraft({ ...draft, isActive: event.target.checked })} /> Active</label>
-        </div>
-        <div className="mt-6 flex justify-end gap-3">
-          <button className="ghost-button" type="button" onClick={onClose}>Cancel</button>
-          <button className="premium-button" type="button" onClick={() => onSave(draft)}>Save Branch</button>
+            <label className="text-sm font-medium text-[#d7e7f8]">
+              Slug
+              <input className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4" required value={draft.slug} onChange={(event) => setDraft({ ...draft, slug: slugify(event.target.value) })} />
+            </label>
+            <label className="text-sm font-medium text-[#d7e7f8]">
+              Location
+              <input className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4" required value={draft.location} onChange={(event) => setDraft({ ...draft, location: event.target.value })} />
+            </label>
+            <label className="text-sm font-medium text-[#d7e7f8]">
+              Phone
+              <input className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4" value={draft.phone} onChange={(event) => setDraft({ ...draft, phone: event.target.value })} />
+            </label>
+            <label className="text-sm font-medium text-[#d7e7f8]">
+              Email
+              <input className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4" type="email" value={draft.email} onChange={(event) => setDraft({ ...draft, email: event.target.value })} />
+            </label>
+            <label className="text-sm font-medium text-[#d7e7f8]">
+              Opening Hours
+              <input className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4" value={draft.openingHours} onChange={(event) => setDraft({ ...draft, openingHours: event.target.value })} />
+            </label>
+            <label className="flex items-center gap-3 text-sm text-[#d7e7f8]"><input checked={draft.isActive} type="checkbox" onChange={(event) => setDraft({ ...draft, isActive: event.target.checked })} /> Active</label>
+          </div>
+          <div className="sticky bottom-0 -mx-5 mt-6 flex flex-col-reverse gap-3 border-t border-white/10 bg-[#06111f]/95 px-5 pb-1 pt-4 backdrop-blur sm:-mx-6 sm:flex-row sm:justify-end sm:px-6">
+            <button className="ghost-button" disabled={isSaving} type="button" onClick={onClose}>Cancel</button>
+            <button className="premium-button" disabled={isSaving} type="button" onClick={() => void onSave(draft)}>{isSaving ? "Saving..." : "Save Branch"}</button>
+          </div>
         </div>
       </div>
     </div>

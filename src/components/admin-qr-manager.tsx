@@ -1,20 +1,20 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { branches } from "@/lib/demo-data";
+import type { AdminBranch } from "@/lib/admin-store";
 
 type QrTarget = {
   label: string;
   url: string;
 };
 
-export function AdminQrManager() {
+export function AdminQrManager({ branches }: { branches: AdminBranch[] }) {
   const origin = typeof window === "undefined" ? "https://qr.robotcafe.co.ke" : window.location.origin;
   const [version, setVersion] = useState(0);
   const targets = useMemo<QrTarget[]>(() => [
     { label: "General Menu QR", url: `${origin}/menu` },
     ...branches.map((branch) => ({ label: `${branch.name.replace("Robot Cafe - ", "")} QR`, url: `${origin}/menu/${branch.slug}` })),
-  ], [origin]);
+  ], [branches, origin]);
   const [copied, setCopied] = useState("");
 
   const download = (target: QrTarget, type: "svg" | "png") => {
