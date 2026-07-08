@@ -3,6 +3,8 @@
 import { useState } from "react";
 import type { AdminBranch } from "@/lib/admin-store";
 
+const branchStorageKey = "robot-cafe-admin-branches";
+
 const slugify = (value: string) =>
   value
     .toLowerCase()
@@ -23,7 +25,7 @@ const emptyBranch = (): AdminBranch => ({
 });
 
 export function AdminBranchManager({ initialBranches }: { initialBranches: AdminBranch[] }) {
-  const [branches, setBranches] = useState(initialBranches);
+  const [branches, setBranches] = useState(() => readSavedBranches(initialBranches));
   const [editing, setEditing] = useState<AdminBranch | null>(null);
   const [toast, setToast] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -31,6 +33,25 @@ export function AdminBranchManager({ initialBranches }: { initialBranches: Admin
   const notify = (message: string) => {
     setToast(message);
     window.setTimeout(() => setToast(""), 2400);
+  };
+
+  const persistBranches = (nextBranches: AdminBranch[]) => {
+    setBranches(nextBranches);
+    saveBranches(nextBranches);
+  };
+
+  const saveDemoBranch = (branch: AdminBranch, message?: string) => {
+    const isNew = !branch.id;
+    const savedBranch = {
+      ...branch,
+      id: isNew ? uniqueBranchId(branches, branch.slug || branch.name) : branch.id,
+      slug: slugify(branch.slug || branch.name),
+      updatedAt: new Date().toISOString(),
+    };
+    const nextBranches = isNew ? [savedBranch, ...branches] : branches.map((item) => (item.id === branch.id ? savedBranch : item));
+    persistBranches(nextBranches);
+    setEditing(null);
+    notify(message ?? (isNew ? "Branch created in demo storage." : "Branch updated in demo storage."));
   };
 
   const save = async (branch: AdminBranch) => {
@@ -44,14 +65,19 @@ export function AdminBranchManager({ initialBranches }: { initialBranches: Admin
       });
       const payload = await response.json();
       if (!response.ok) {
+        if (canUseDemoBranchStorage(payload.error)) {
+          saveDemoBranch(branch, `${isNew ? "Created" : "Saved"} locally for this Vercel demo.`);
+          return;
+        }
         notify(payload.error ?? `Unable to ${isNew ? "create" : "update"} branch.`);
         return;
       }
-      setBranches((current) => (isNew ? [payload.data, ...current] : current.map((item) => (item.id === branch.id ? payload.data : item))));
+      const nextBranches = isNew ? [payload.data, ...branches] : branches.map((item) => (item.id === branch.id ? payload.data : item));
+      persistBranches(nextBranches);
       setEditing(null);
       notify(isNew ? "Branch created." : "Branch updated.");
     } catch {
-      notify("Branch save failed. Please check your connection and try again.");
+      saveDemoBranch(branch, `${isNew ? "Created" : "Saved"} locally because the server is unavailable.`);
     } finally {
       setIsSaving(false);
     }
@@ -145,4 +171,35 @@ function BranchEditor({
       </div>
     </div>
   );
+}
+
+function canUseDemoBranchStorage(error: unknown) {
+  const message = String(error ?? "").toLowerCase();
+  return message.includes("database persistence is not configured") || message.includes("invalid input syntax for type uuid");
+}
+
+function uniqueBranchId(branches: AdminBranch[], value: string) {
+  const base = `branch-${slugify(value) || "new"}`;
+  if (!branches.some((branch) => branch.id === base)) return base;
+  return `${base}-${branches.length + 1}`;
+}
+
+function readSavedBranches(fallback: AdminBranch[]) {
+  if (typeof window === "undefined") return fallback;
+  try {
+    const raw = window.localStorage.getItem(branchStorageKey);
+    if (!raw) return fallback;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.length ? (parsed as AdminBranch[]) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function saveBranches(branches: AdminBranch[]) {
+  try {
+    window.localStorage.setItem(branchStorageKey, JSON.stringify(branches));
+  } catch {
+    // Demo persistence is a convenience layer; the API path remains the production source of truth.
+  }
 }
