@@ -166,7 +166,12 @@ const toActivity = (row: Record<string, unknown>): ActivityLog => ({
 
 export async function listAdminState(): Promise<AdminState> {
   const supabase = createSupabaseServerClient();
-  if (!supabase) return demoState();
+  if (!supabase) {
+    if (process.env.REQUIRE_SUPABASE_PERSISTENCE === "true") {
+      throw new Error("Supabase persistence is required but not configured.");
+    }
+    return demoState();
+  }
 
   const [branchesResult, categoriesResult, menuItemsResult, activityResult, feedbackResult, qrResult] = await Promise.all([
     supabase.from("branches").select("*").order("name", { ascending: true }),
@@ -246,6 +251,7 @@ async function syncMenuItemBranches(menuItemId: string, branchSlugs: string[]) {
 async function getMenuItem(itemId: string) {
   const supabase = createSupabaseServerClient();
   if (!supabase) {
+    if (process.env.REQUIRE_SUPABASE_PERSISTENCE === "true") throw new Error("Supabase persistence is required but not configured.");
     const item = demoState().menuItems.find((entry) => entry.id === itemId);
     if (!item) throw new Error("Menu item not found.");
     return item;
@@ -262,6 +268,7 @@ async function getMenuItem(itemId: string) {
 export async function createMenuItem(input: MenuItemInput) {
   const supabase = createSupabaseServerClient();
   if (!supabase) {
+    if (process.env.REQUIRE_SUPABASE_PERSISTENCE === "true") throw new Error("Supabase persistence is required but not configured.");
     const item = { ...input, id: id("item"), updatedAt: now() };
     const state = demoState();
     state.menuItems = [item, ...state.menuItems];
@@ -301,6 +308,7 @@ export async function createMenuItem(input: MenuItemInput) {
 export async function updateMenuItem(itemId: string, input: MenuItemInput) {
   const supabase = createSupabaseServerClient();
   if (!supabase) {
+    if (process.env.REQUIRE_SUPABASE_PERSISTENCE === "true") throw new Error("Supabase persistence is required but not configured.");
     const state = demoState();
     let updated: AdminMenuItem | undefined;
     state.menuItems = state.menuItems.map((item) => {
@@ -345,6 +353,7 @@ export async function deleteMenuItem(itemId: string) {
   const existing = await getMenuItem(itemId);
   const supabase = createSupabaseServerClient();
   if (!supabase) {
+    if (process.env.REQUIRE_SUPABASE_PERSISTENCE === "true") throw new Error("Supabase persistence is required but not configured.");
     const state = demoState();
     state.menuItems = state.menuItems.filter((item) => item.id !== itemId);
     await logActivity("Menu Deleted", "menu_items", itemId);
@@ -359,6 +368,7 @@ export async function deleteMenuItem(itemId: string) {
 export async function createCategory(input: CategoryInput) {
   const supabase = createSupabaseServerClient();
   if (!supabase) {
+    if (process.env.REQUIRE_SUPABASE_PERSISTENCE === "true") throw new Error("Supabase persistence is required but not configured.");
     const category = { ...input, id: id("category"), updatedAt: now() };
     const state = demoState();
     state.categories = [category, ...state.categories].sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name));
@@ -384,6 +394,7 @@ export async function createCategory(input: CategoryInput) {
 export async function updateCategory(categoryId: string, input: CategoryInput) {
   const supabase = createSupabaseServerClient();
   if (!supabase) {
+    if (process.env.REQUIRE_SUPABASE_PERSISTENCE === "true") throw new Error("Supabase persistence is required but not configured.");
     const state = demoState();
     let updated: AdminCategory | undefined;
     state.categories = state.categories
@@ -417,6 +428,7 @@ export async function updateCategory(categoryId: string, input: CategoryInput) {
 export async function deleteCategory(categoryId: string) {
   const supabase = createSupabaseServerClient();
   if (!supabase) {
+    if (process.env.REQUIRE_SUPABASE_PERSISTENCE === "true") throw new Error("Supabase persistence is required but not configured.");
     const state = demoState();
     if (state.menuItems.some((item) => item.categoryId === categoryId)) throw new Error("This category is referenced by menu items. Deactivate it instead.");
     state.categories = state.categories.filter((category) => category.id !== categoryId);
@@ -438,6 +450,7 @@ export async function deleteCategory(categoryId: string) {
 export async function createBranch(input: BranchInput) {
   const supabase = createSupabaseServerClient();
   if (!supabase) {
+    if (process.env.REQUIRE_SUPABASE_PERSISTENCE === "true") throw new Error("Supabase persistence is required but not configured.");
     const branch = { ...input, id: id("branch"), updatedAt: now() };
     const state = demoState();
     state.branches = [branch, ...state.branches].sort((a, b) => a.name.localeCompare(b.name));
@@ -465,6 +478,7 @@ export async function createBranch(input: BranchInput) {
 export async function updateBranch(branchId: string, input: BranchInput) {
   const supabase = createSupabaseServerClient();
   if (!supabase) {
+    if (process.env.REQUIRE_SUPABASE_PERSISTENCE === "true") throw new Error("Supabase persistence is required but not configured.");
     const state = demoState();
     let updated: AdminBranch | undefined;
     state.branches = state.branches
