@@ -16,8 +16,8 @@ export function AdminQrManager({ branches }: { branches: AdminBranch[] }) {
   const origin = typeof window === "undefined" ? "https://qr.robotcafe.co.ke" : window.location.origin;
   const [version, setVersion] = useState(0);
   const targets = useMemo<QrTarget[]>(() => [
-    { label: "Robot Cafe Menu Sweetness", url: `${origin}/menu` },
-    ...activeBranches.map((branch) => ({ label: `Robot Cafe ${branch.name.replace("Robot Cafe - ", "")} Menu Sweetness`, url: `${origin}/menu/${branch.slug}` })),
+    { label: "Robot Cafe Digital Dining Menu", url: `${origin}/menu` },
+    ...activeBranches.map((branch) => ({ label: `Robot Cafe ${branch.name.replace("Robot Cafe - ", "")} Digital Menu`, url: `${origin}/menu/${branch.slug}` })),
   ], [activeBranches, origin]);
   const [copied, setCopied] = useState("");
 
