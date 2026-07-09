@@ -70,6 +70,7 @@ export async function uploadSupabaseMenuImage(input: {
   const owner = input.menuItemId || "draft";
   const basePath = `menu-items/${owner}/${id}-${safeName(input.fileName)}`;
   const paths = {
+    provider: "supabase",
     original: `${basePath}/original.${extensionFor(input.bundle.original.mimeType)}`,
     thumbnail: `${basePath}/thumbnail.webp`,
     card: `${basePath}/card.webp`,
@@ -108,10 +109,11 @@ export async function deleteSupabaseMenuImage(image: ManagedImage) {
   const supabase = createSupabaseServerClient();
   if (!supabase) throw new Error("Supabase storage is not configured.");
 
-  const paths = Object.values(image.storagePaths ?? {}).filter(Boolean);
+  const paths = Object.entries(image.storagePaths ?? {})
+    .filter(([key, value]) => key !== "provider" && Boolean(value))
+    .map(([, value]) => String(value));
   if (!paths.length) return;
 
   const { error } = await supabase.storage.from(bucket).remove(paths);
   if (error) throw new Error(`Image delete failed: ${error.message}`);
 }
-

@@ -24,6 +24,7 @@ export type ManagedImage = {
   sortOrder: number;
   createdAt: string;
   storagePaths?: {
+    provider?: string;
     original?: string;
     thumbnail?: string;
     card?: string;

@@ -11,6 +11,18 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "api.qrserver.com",
       },
+      {
+        protocol: "https",
+        hostname: "robotcafe.co.ke",
+      },
+      {
+        protocol: "https",
+        hostname: "www.robotcafe.co.ke",
+      },
+      {
+        protocol: "https",
+        hostname: "pyifclbmiqikylmvreht.supabase.co",
+      },
     ],
   },
   async headers() {

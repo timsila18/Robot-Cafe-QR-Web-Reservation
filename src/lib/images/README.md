@@ -1,6 +1,15 @@
 # Robot Cafe Image Storage Strategy
 
-The demo uses `LocalStorageAdapter`, which stores optimized images as browser data URLs inside the menu item payload. This is temporary and suitable for Vercel preview demos because it requires no external bucket configuration.
+The production recommendation for Robot Cafe is `IMAGE_STORAGE_DRIVER=cpanel`, which stores optimized menu images in the existing cPanel hosting account while keeping only image metadata and URLs in Supabase.
+
+cPanel setup:
+
+1. In cPanel, create a restricted API token.
+2. Create `public_html/qr-menu-images`.
+3. Set `CPANEL_API_BASE`, `CPANEL_USERNAME`, `CPANEL_API_TOKEN`, `CPANEL_UPLOAD_DIR`, and `CPANEL_PUBLIC_BASE_URL` in Vercel.
+4. Set both `IMAGE_STORAGE_DRIVER=cpanel` and `NEXT_PUBLIC_IMAGE_STORAGE_DRIVER=cpanel`.
+
+The demo/local fallback uses `LocalStorageAdapter`, which stores optimized images as browser data URLs inside the menu item payload. This is only for preview demos because it is not durable.
 
 To switch to Supabase Storage, Cloudinary, S3, or Firebase Storage later:
 

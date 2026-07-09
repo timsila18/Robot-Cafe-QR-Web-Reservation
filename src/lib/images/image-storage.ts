@@ -131,9 +131,17 @@ export class FutureCloudinaryAdapter extends LocalStorageAdapter {
   // ManagedImage. The admin workflow can keep using uploadImage/replaceImage.
 }
 
+export class FutureCpanelStorageAdapter extends FutureSupabaseStorageAdapter {
+  name = "cpanel-hosting-storage";
+  // Uses the same browser workflow and /api/admin/images endpoint. The server
+  // selects cPanel when IMAGE_STORAGE_DRIVER=cpanel and writes optimized files
+  // into public_html through the cPanel API token.
+}
+
 class AutoImageStorageAdapter extends LocalStorageAdapter {
   name = "auto-production-with-local-fallback";
-  private production = new FutureSupabaseStorageAdapter();
+  private production =
+    process.env.NEXT_PUBLIC_IMAGE_STORAGE_DRIVER === "cpanel" ? new FutureCpanelStorageAdapter() : new FutureSupabaseStorageAdapter();
 
   async uploadImage(input: {
     file: File;
@@ -145,7 +153,7 @@ class AutoImageStorageAdapter extends LocalStorageAdapter {
     try {
       return await this.production.uploadImage(input);
     } catch (error) {
-      if (process.env.NEXT_PUBLIC_IMAGE_STORAGE_DRIVER === "supabase") throw error;
+      if (process.env.NEXT_PUBLIC_IMAGE_STORAGE_DRIVER !== "local") throw error;
       return super.uploadImage(input);
     }
   }
@@ -161,7 +169,7 @@ class AutoImageStorageAdapter extends LocalStorageAdapter {
     try {
       return await this.production.replaceImage(image, file, bundle);
     } catch (error) {
-      if (process.env.NEXT_PUBLIC_IMAGE_STORAGE_DRIVER === "supabase") throw error;
+      if (process.env.NEXT_PUBLIC_IMAGE_STORAGE_DRIVER !== "local") throw error;
       return super.replaceImage(image, file, bundle);
     }
   }
