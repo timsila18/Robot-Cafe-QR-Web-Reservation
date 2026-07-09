@@ -95,15 +95,36 @@ const toBranch = (row: Record<string, unknown>): AdminBranch => {
 };
 
 const toCategory = (row: Record<string, unknown>): AdminCategory => ({
-  id: String(row.id),
-  name: String(row.name),
-  slug: String(row.slug),
-  description: String(row.description ?? ""),
-  imageUrl: String(row.image_url ?? ""),
-  sortOrder: Number(row.sort_order ?? 0),
-  isActive: Boolean(row.is_active),
-  updatedAt: String(row.updated_at ?? row.created_at ?? now()),
+  ...(() => {
+    const parsed = parseCategoryDescription(String(row.description ?? ""));
+    return {
+      id: String(row.id),
+      name: String(row.name),
+      slug: String(row.slug),
+      description: parsed.description,
+      imageUrl: String(row.image_url ?? parsed.imageUrl),
+      sortOrder: Number(row.sort_order ?? 0),
+      isActive: Boolean(row.is_active),
+      updatedAt: String(row.updated_at ?? row.created_at ?? now()),
+    };
+  })(),
 });
+
+const categoryImageMarker = "RC_CATEGORY_IMAGE_URL:";
+
+function parseCategoryDescription(value: string) {
+  const lines = value.split("\n");
+  const marker = lines.find((line) => line.startsWith(categoryImageMarker));
+  return {
+    description: lines.filter((line) => !line.startsWith(categoryImageMarker)).join("\n").trim(),
+    imageUrl: marker?.slice(categoryImageMarker.length).trim() ?? "",
+  };
+}
+
+function descriptionWithCategoryImage(input: CategoryInput) {
+  const description = input.description.trim();
+  return input.imageUrl ? [description, `${categoryImageMarker}${input.imageUrl}`].filter(Boolean).join("\n") : description;
+}
 
 const categoryPayload = (input: CategoryInput) => ({
   name: input.name,
@@ -117,7 +138,7 @@ const categoryPayload = (input: CategoryInput) => ({
 const categoryPayloadWithoutImage = (input: CategoryInput) => {
   const { image_url: _imageUrl, ...payload } = categoryPayload(input);
   void _imageUrl;
-  return payload;
+  return { ...payload, description: descriptionWithCategoryImage(input) };
 };
 
 const isMissingImageColumnError = (message: string) => message.toLowerCase().includes("image_url");
