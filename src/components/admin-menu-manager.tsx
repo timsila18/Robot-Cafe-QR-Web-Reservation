@@ -16,6 +16,11 @@ type AdminMenuManagerProps = {
   branches: AdminBranch[];
 };
 
+type SaveResult = {
+  ok: boolean;
+  message?: string;
+};
+
 const pageSize = 8;
 
 const slugify = (value: string) =>
@@ -102,7 +107,7 @@ export function AdminMenuManager({ initialItems, categories, branches }: AdminMe
     saveDemoMenuItems(nextItems);
   };
 
-  const saveDemoItem = (item: AdminMenuItem, message?: string) => {
+  const saveDemoItem = (item: AdminMenuItem, message?: string): SaveResult => {
     const isNew = !item.id;
     const savedItem = {
       ...item,
@@ -114,12 +119,13 @@ export function AdminMenuManager({ initialItems, categories, branches }: AdminMe
     persistItems(nextItems);
     setEditing(null);
     notify(message ?? (isNew ? "Menu item created in demo storage." : "Menu item updated in demo storage."));
+    return { ok: true };
   };
 
-  const saveItem = async (item: AdminMenuItem) => {
+  const saveItem = async (item: AdminMenuItem): Promise<SaveResult> => {
     if (item.availableBranches.length === 0) {
       notify("Select at least one branch.");
-      return;
+      return { ok: false, message: "Select at least one branch." };
     }
 
     const isNew = !item.id;
@@ -133,16 +139,16 @@ export function AdminMenuManager({ initialItems, categories, branches }: AdminMe
 
     if (!response.ok) {
       if (canUseDemoPersistence(result.error)) {
-        saveDemoItem(item, `${isNew ? "Created" : "Saved"} locally for this Vercel demo.`);
-        return;
+        return saveDemoItem(item, `${isNew ? "Created" : "Saved"} locally for this Vercel demo.`);
       }
       notify(result.error ?? "Unable to save item.");
-      return;
+      return { ok: false, message: result.error ?? "Unable to save item." };
     }
 
     persistItems(isNew ? [result.data, ...items] : items.map((entry) => (entry.id === item.id ? result.data : entry)));
     setEditing(null);
     notify(isNew ? "Menu item created." : "Menu item updated.");
+    return { ok: true };
   };
 
   const removeItem = async (itemId: string) => {
@@ -383,13 +389,15 @@ function MenuItemEditor({
   item: AdminMenuItem;
   categories: AdminCategory[];
   branches: AdminBranch[];
-  onSave: (item: AdminMenuItem) => void;
+  onSave: (item: AdminMenuItem) => Promise<SaveResult>;
   onClose: () => void;
 }) {
   const [draft, setDraft] = useState(item);
   const [imageUrl, setImageUrl] = useState("");
   const [progress, setProgress] = useState<UploadProgress[]>([]);
   const [mediaError, setMediaError] = useState("");
+  const [formError, setFormError] = useState("");
+  const [saving, setSaving] = useState(false);
 
   const set = <K extends keyof AdminMenuItem>(key: K, value: AdminMenuItem[K]) => setDraft((current) => ({ ...current, [key]: value }));
   const addImage = (url: string) => {
@@ -488,6 +496,37 @@ function MenuItemEditor({
   const moveImage = (index: number, direction: -1 | 1) => {
     set("images", reorder(draft.images, index, index + direction));
   };
+  const validateDraft = () => {
+    if (!categories.length) return "Create a category first before adding a menu item.";
+    if (!draft.name.trim()) return "Enter the menu item name.";
+    if (!draft.slug.trim()) return "Enter a URL slug for this item.";
+    if (draft.shortDescription.trim().length < 2) return "Add a short description.";
+    if (draft.description.trim().length < 8) return "Add a fuller description of at least 8 characters.";
+    if (!draft.categoryId) return "Choose a category.";
+    if (draft.price < 0) return "Price cannot be negative.";
+    if (draft.preparationTime < 0) return "Preparation time cannot be negative.";
+    if (!draft.availableBranches.length) return "Select at least one branch where this item should appear.";
+    return "";
+  };
+  const handleSave = async () => {
+    const error = validateDraft();
+    if (error) {
+      setFormError(error);
+      return;
+    }
+
+    setSaving(true);
+    setFormError("");
+    const result = await onSave({
+      ...draft,
+      name: draft.name.trim(),
+      slug: slugify(draft.slug || draft.name),
+      shortDescription: draft.shortDescription.trim(),
+      description: draft.description.trim(),
+    });
+    if (!result.ok) setFormError(result.message ?? "Unable to save this menu item.");
+    setSaving(false);
+  };
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/40 p-4 backdrop-blur-sm">
@@ -499,6 +538,8 @@ function MenuItemEditor({
           </div>
           <button className="ghost-button min-h-10 px-3" type="button" onClick={onClose}>Close</button>
         </div>
+
+        {formError ? <p className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{formError}</p> : null}
 
         <div className="mt-6 grid gap-4 lg:grid-cols-2">
           <Field label="Name" value={draft.name} onChange={(value) => { set("name", value); set("slug", slugify(value)); }} />
@@ -677,9 +718,12 @@ function MenuItemEditor({
           )}
         </section>
 
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+        <div className="sticky bottom-0 -mx-5 mt-6 flex flex-col gap-3 border-t border-slate-200 bg-white/95 px-5 py-4 backdrop-blur sm:flex-row sm:justify-end">
+          {formError ? <p className="mr-auto self-center text-sm font-semibold text-red-700">{formError}</p> : null}
           <button className="ghost-button" type="button" onClick={onClose}>Cancel</button>
-          <button className="premium-button" type="button" onClick={() => onSave(draft)}>Save Menu Item</button>
+          <button className="premium-button disabled:cursor-not-allowed disabled:opacity-60" disabled={saving} type="button" onClick={() => void handleSave()}>
+            {saving ? "Saving..." : "Save Menu Item"}
+          </button>
         </div>
       </div>
     </div>
