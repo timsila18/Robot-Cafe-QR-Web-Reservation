@@ -610,7 +610,7 @@ function MenuItemEditor({
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h4 className="text-sm font-semibold text-slate-950">Media Library</h4>
-              <p className="mt-1 text-xs text-slate-500">Upload up to {maxImagesPerItem} optimized food photos. Each file is resized into thumbnail, card, and detail versions before saving.</p>
+              <p className="mt-1 text-xs text-slate-500">Upload up to {maxImagesPerItem} food photos. Robot Cafe keeps the original file and creates thumbnail, card, and detail versions for fast menu browsing.</p>
             </div>
             <p className="text-xs font-semibold text-gold">{draft.images.length}/{maxImagesPerItem} images</p>
           </div>
@@ -625,7 +625,7 @@ function MenuItemEditor({
             <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
               <div>
                 <p className="text-base font-semibold text-slate-950">Drop high-resolution food photos here</p>
-                <p className="mt-1 text-sm text-slate-500">JPG, JPEG, PNG, WEBP. Max 20MB per image. Robot Cafe creates lightweight WEBP versions for fast menu browsing.</p>
+                <p className="mt-1 text-sm text-slate-500">JPG, JPEG, PNG, WEBP. Max 20MB per image. Originals stay intact while lightweight WEBP versions keep the customer menu fast.</p>
               </div>
               <label className="premium-button cursor-pointer">
                 Select Images

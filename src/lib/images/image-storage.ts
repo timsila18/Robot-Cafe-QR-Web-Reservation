@@ -5,10 +5,7 @@ const imageId = () => `image-${crypto.randomUUID()}`;
 
 const productionBundle = (bundle: OptimizedImageBundle): OptimizedImageBundle => ({
   ...bundle,
-  original: {
-    ...bundle.detail,
-    url: bundle.detail.url,
-  },
+  original: bundle.original,
 });
 
 export class LocalStorageAdapter implements ImageStorageAdapter {
