@@ -1,13 +1,18 @@
 import { Suspense } from "react";
 import { PublicLayout } from "@/components/public-layout";
 import { ReservationForm } from "@/components/reservation-form";
+import { listAdminState } from "@/lib/admin-store";
 
 export const metadata = {
   title: "Reservations | Robot Cafe",
   description: "Request a Robot Cafe branch reservation and notify the right branch team.",
 };
 
-export default function ReservationsPage() {
+export const dynamic = "force-dynamic";
+
+export default async function ReservationsPage() {
+  const { branches } = await listAdminState();
+
   return (
     <PublicLayout>
       <section className="mx-auto w-full max-w-7xl px-5 py-12 sm:px-8">
@@ -19,10 +24,9 @@ export default function ReservationsPage() {
           </p>
         </div>
         <Suspense fallback={<div className="luxury-panel mx-auto h-96 max-w-4xl animate-pulse" />}>
-          <ReservationForm />
+          <ReservationForm branches={branches.filter((branch) => branch.isActive)} />
         </Suspense>
       </section>
     </PublicLayout>
   );
 }
-

@@ -3,10 +3,16 @@ import { Footer } from "@/components/footer";
 import { HeroSection } from "@/components/hero-section";
 import { HomeReservationPanel } from "@/components/home-reservation-panel";
 import { PublicLayout } from "@/components/public-layout";
-import { branches, formatPrice, menuItems } from "@/lib/demo-data";
+import { listAdminState } from "@/lib/admin-store";
+import { formatPrice } from "@/lib/demo-data";
 import { getOptimizedImageUrl, getPrimaryImage } from "@/lib/images/image-utils";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  const state = await listAdminState();
+  const branches = state.branches.filter((branch) => branch.isActive);
+  const menuItems = state.menuItems.filter((item) => item.isActive);
   const showcaseItems = menuItems.filter((item) => item.isFeatured || item.isBestSeller).slice(0, 4);
 
   return (
@@ -76,7 +82,7 @@ export default function Home() {
         </div>
       </section>
 
-      <HomeReservationPanel />
+      <HomeReservationPanel branches={branches} />
 
       <Footer />
     </PublicLayout>

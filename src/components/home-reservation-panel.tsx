@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { BrandMark } from "@/components/brand-mark";
-import { branches } from "@/lib/demo-data";
+import type { AdminBranch } from "@/lib/admin-store";
 
 type ReservationDraft = {
   name: string;
@@ -17,7 +17,7 @@ type ReservationDraft = {
 
 const today = () => new Date().toISOString().slice(0, 10);
 
-export function HomeReservationPanel() {
+export function HomeReservationPanel({ branches }: { branches: AdminBranch[] }) {
   const [draft, setDraft] = useState<ReservationDraft>({
     name: "",
     phone: "",

@@ -2,7 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
-import { branches } from "@/lib/demo-data";
+import type { AdminBranch } from "@/lib/admin-store";
 
 type FormState = {
   name: string;
@@ -16,13 +16,13 @@ type FormState = {
   notes: string;
 };
 
-const branchIdFromSlug = (slug: string | null) => branches.find((branch) => branch.slug === slug)?.id ?? branches[0]?.id ?? "";
+const branchIdFromSlug = (branches: AdminBranch[], slug: string | null) => branches.find((branch) => branch.slug === slug)?.id ?? branches[0]?.id ?? "";
 
 const today = () => new Date().toISOString().slice(0, 10);
 
-export function ReservationForm() {
+export function ReservationForm({ branches }: { branches: AdminBranch[] }) {
   const params = useSearchParams();
-  const initialBranchId = useMemo(() => branchIdFromSlug(params.get("branch")), [params]);
+  const initialBranchId = useMemo(() => branchIdFromSlug(branches, params.get("branch")), [branches, params]);
   const [form, setForm] = useState<FormState>({
     name: "",
     phone: "",
@@ -123,4 +123,3 @@ function Field({
     </label>
   );
 }
-
