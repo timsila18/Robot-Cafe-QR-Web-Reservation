@@ -1,10 +1,9 @@
 import { cookies } from "next/headers";
 import { fail, ok } from "@/lib/api-response";
 import { logActivity } from "@/lib/admin-store";
+import { ADMIN_COOKIE, ADMIN_EMAIL_COOKIE } from "@/lib/admin-session";
 import { listAdminUsers } from "@/lib/rbac";
 import { adminLoginSchema } from "@/lib/validation";
-
-const ADMIN_COOKIE = "robot_admin_session";
 
 export async function POST(request: Request) {
   try {
@@ -19,13 +18,16 @@ export async function POST(request: Request) {
         .map((user) => ({ email: user.email, password: "RobotCafe@2026" })),
     ].filter(Boolean) as { email: string; password: string }[];
 
-    const isAllowed = allowedCredentials.some(
+    const matchedCredential = allowedCredentials.find(
       (credential) => input.email.toLowerCase() === credential.email.toLowerCase() && input.password === credential.password,
     );
 
-    if (!isAllowed) {
+    if (!matchedCredential) {
       throw new Error("Invalid admin credentials.");
     }
+
+    const adminUser = listAdminUsers().find((user) => user.email.toLowerCase() === matchedCredential.email.toLowerCase());
+    const redirectTo = adminUser?.role === "hostess" ? "/admin/reservations" : "/admin";
 
     const cookieStore = await cookies();
     cookieStore.set(ADMIN_COOKIE, "active", {
@@ -35,8 +37,15 @@ export async function POST(request: Request) {
       maxAge: 60 * 60 * 8,
       path: "/",
     });
+    cookieStore.set(ADMIN_EMAIL_COOKIE, matchedCredential.email.toLowerCase(), {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60 * 60 * 8,
+      path: "/",
+    });
     await logActivity("Admin Login", "admin_users", "local-admin");
-    return ok({ redirectTo: "/admin" });
+    return ok({ redirectTo });
   } catch (error) {
     return fail(error, 401);
   }

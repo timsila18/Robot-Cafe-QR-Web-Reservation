@@ -1,6 +1,6 @@
 import { branches } from "@/lib/demo-data";
 
-export type AdminRole = "super_admin" | "general_manager" | "branch_manager" | "content_manager";
+export type AdminRole = "super_admin" | "general_manager" | "branch_manager" | "content_manager" | "hostess";
 
 export type Permission =
   | "manage_users"
@@ -51,6 +51,7 @@ export const roleLabels: Record<AdminRole, string> = {
   general_manager: "General Manager",
   branch_manager: "Branch Manager",
   content_manager: "Content Manager",
+  hostess: "Hostess",
 };
 
 export const rolePermissions: Record<AdminRole, Permission[]> = {
@@ -85,6 +86,7 @@ export const rolePermissions: Record<AdminRole, Permission[]> = {
   ],
   branch_manager: ["manage_menu", "manage_images", "manage_qr", "view_analytics", "manage_feedback", "manage_reservations"],
   content_manager: ["manage_menu", "manage_images", "manage_categories"],
+  hostess: ["manage_reservations"],
 };
 
 const now = () => new Date().toISOString();
@@ -119,6 +121,24 @@ let adminUsers: AdminUser[] = [
     createdAt: "2026-06-20T08:00:00.000Z",
   },
   {
+    id: "user-imaara-hostess",
+    name: "Imaara Hostess",
+    email: "imaara@robotcafe.co.ke",
+    role: "hostess",
+    branchId: "imaara-mall",
+    status: "active",
+    createdAt: "2026-06-20T08:00:00.000Z",
+  },
+  {
+    id: "user-lana-hostess",
+    name: "Lana Hostess",
+    email: "lana@robotcafe.co.ke",
+    role: "hostess",
+    branchId: "lana-plaza",
+    status: "active",
+    createdAt: "2026-06-20T08:00:00.000Z",
+  },
+  {
     id: "user-content-manager",
     name: "Content Manager",
     email: "content@robotcafe.co.ke",
@@ -145,6 +165,10 @@ let auditLogs: AuditLog[] = [
 
 export function getCurrentAdminUser() {
   return adminUsers[0];
+}
+
+export function getAdminUserByEmail(email: string) {
+  return adminUsers.find((user) => user.status === "active" && user.email.toLowerCase() === email.toLowerCase());
 }
 
 export function hasPermission(role: AdminRole, permission: Permission) {

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { ReservationRecord } from "@/lib/reservations";
 
-export function AdminReservationsConsole({ reservations }: { reservations: ReservationRecord[] }) {
+export function AdminReservationsConsole({ currentUserName, reservations }: { currentUserName?: string; reservations: ReservationRecord[] }) {
   const [rows, setRows] = useState(reservations);
   const [toast, setToast] = useState("");
   const upcoming = rows.filter((reservation) => !["cancelled", "completed", "expired"].includes(reservation.status));
@@ -36,7 +36,7 @@ export function AdminReservationsConsole({ reservations }: { reservations: Reser
       <section>
         <h2 className="premium-text-gradient text-4xl font-semibold">Reservations</h2>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500">
-          Branch-routed reservation requests with email delivery status for the Robot Cafe operations team.
+          Branch-routed reservation requests with email delivery status for the Robot Cafe operations team{currentUserName ? ` - ${currentUserName}.` : "."}
         </p>
       </section>
 

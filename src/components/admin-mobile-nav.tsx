@@ -1,9 +1,10 @@
 import Link from "next/link";
+import { getSessionAdminUser } from "@/lib/admin-session";
 import { adminNavItems } from "@/lib/admin-nav";
-import { getCurrentAdminUser, hasPermission } from "@/lib/rbac";
+import { hasPermission } from "@/lib/rbac";
 
-export function AdminMobileNav() {
-  const currentUser = getCurrentAdminUser();
+export async function AdminMobileNav() {
+  const currentUser = await getSessionAdminUser();
   const visibleItems = adminNavItems.filter(([, , permission]) => !permission || hasPermission(currentUser.role, permission));
 
   return (
