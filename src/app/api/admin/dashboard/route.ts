@@ -22,10 +22,7 @@ export async function GET() {
     recentlyUpdatedItems: [...state.menuItems]
       .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
       .slice(0, 8),
-    latestFeedback: [
-      { id: "feedback-1", branch: "Imaara Mall", rating: 5, comment: "Loved the menu flow.", status: "new" },
-      { id: "feedback-2", branch: "Lana Plaza", rating: 4, comment: "Easy to find coffee and desserts.", status: "reviewed" },
-    ],
+    latestFeedback: [],
     recentActivity: state.activityLogs.slice(0, 8),
   });
 }
