@@ -39,6 +39,8 @@ export function toPublicCategories(categories: AdminCategory[]): Category[] {
     id: category.id,
     name: category.name,
     slug: category.slug,
+    description: category.description,
+    imageUrl: category.imageUrl,
     sortOrder: category.sortOrder,
     isActive: category.isActive,
     createdAt: category.updatedAt,

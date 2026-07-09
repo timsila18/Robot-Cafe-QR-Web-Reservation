@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useMemo, useState } from "react";
 import type { AdminCategory, AdminMenuItem } from "@/lib/admin-store";
 import { canUseDemoPersistence, readDemoCategories, saveDemoCategories } from "@/lib/demo-persistence";
@@ -10,6 +11,16 @@ const slugify = (value: string) =>
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
+
+const isValidImageUrl = (value?: string) => {
+  if (!value) return false;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" || url.protocol === "http:";
+  } catch {
+    return false;
+  }
+};
 
 export function AdminCategoryManager({
   initialCategories,
@@ -105,7 +116,7 @@ export function AdminCategoryManager({
           <h2 className="text-3xl font-semibold text-slate-950">Categories</h2>
           <p className="mt-2 text-sm text-slate-500">Create, edit, sort, activate, deactivate, and safely delete categories.</p>
         </div>
-        <button className="premium-button" type="button" onClick={() => setEditing({ id: "", name: "", slug: "", description: "", sortOrder: categories.length + 1, isActive: true, updatedAt: new Date().toISOString() })}>
+        <button className="premium-button" type="button" onClick={() => setEditing({ id: "", name: "", slug: "", description: "", imageUrl: "", sortOrder: categories.length + 1, isActive: true, updatedAt: new Date().toISOString() })}>
           Create Category
         </button>
       </div>
@@ -114,15 +125,27 @@ export function AdminCategoryManager({
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {filtered.map((category) => (
-          <article className="luxury-panel p-5" key={category.id}>
-            <p className="text-xs uppercase tracking-[0.24em] text-gold">Sort {category.sortOrder}</p>
-            <h3 className="mt-4 text-2xl font-semibold text-slate-950">{category.name}</h3>
-            <p className="mt-3 text-sm text-slate-500">{menuItems.filter((item) => item.categoryId === category.id).length} menu items</p>
-            <p className="mt-2 text-sm text-slate-500">{category.description}</p>
-            <div className="mt-5 flex flex-wrap gap-3 text-sm">
+          <article className="luxury-panel overflow-hidden" key={category.id}>
+            <div className="relative aspect-[4/3] bg-[#06111f]">
+              {isValidImageUrl(category.imageUrl) ? (
+                <Image alt={category.name} className="object-cover" fill sizes="(min-width: 1280px) 28vw, (min-width: 640px) 44vw, 100vw" src={category.imageUrl} />
+              ) : (
+                <div className="grid h-full place-items-center bg-[radial-gradient(circle_at_30%_20%,rgba(216,169,40,.24),transparent_34%),linear-gradient(135deg,#06111f,#08213a)] text-sm font-bold uppercase tracking-[0.24em] text-gold">
+                  Category Photo
+                </div>
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent" />
+              <p className="absolute left-4 top-4 rounded-full border border-gold/35 bg-black/55 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-gold">Sort {category.sortOrder}</p>
+            </div>
+            <div className="p-5">
+              <h3 className="text-2xl font-semibold text-slate-950">{category.name}</h3>
+              <p className="mt-3 text-sm text-slate-500">{menuItems.filter((item) => item.categoryId === category.id).length} menu items</p>
+              <p className="mt-2 text-sm text-slate-500">{category.description}</p>
+              <div className="mt-5 flex flex-wrap gap-3 text-sm">
               <button className="text-gold" type="button" onClick={() => setEditing(category)}>Edit</button>
               <button className="text-slate-500" type="button" onClick={() => void save({ ...category, isActive: !category.isActive })}>{category.isActive ? "Deactivate" : "Activate"}</button>
               <button className="text-red-600" type="button" onClick={() => remove(category)}>Delete</button>
+              </div>
             </div>
           </article>
         ))}
@@ -147,10 +170,16 @@ function CategoryEditor({ category, onClose, onSave }: { category: AdminCategory
       <div className="mx-auto flex min-h-full w-full max-w-xl items-start sm:items-center">
         <div className="my-4 max-h-[calc(100svh-2rem)] w-full overflow-y-auto rounded-2xl border border-gold/20 bg-[#06111f] p-5 text-white shadow-2xl sm:my-8 sm:max-h-[calc(100svh-4rem)] sm:p-6">
           <h3 className="text-2xl font-semibold text-white">{draft.id ? "Edit Category" : "Create Category"}</h3>
-          <p className="mt-2 text-sm text-[#9fb3c8]">Add a clean category that will persist in the admin menu once saved.</p>
+          <p className="mt-2 text-sm text-[#9fb3c8]">Add a clean category with a premium photo for the customer menu.</p>
           <div className="mt-5 space-y-4">
           <input className="h-12 w-full rounded-xl border border-slate-200 px-4" placeholder="Name" value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value, slug: slugify(event.target.value) })} />
           <input className="h-12 w-full rounded-xl border border-slate-200 px-4" placeholder="Slug" value={draft.slug} onChange={(event) => setDraft({ ...draft, slug: slugify(event.target.value) })} />
+          <input className="h-12 w-full rounded-xl border border-slate-200 px-4" placeholder="Category image URL from cPanel" value={draft.imageUrl ?? ""} onChange={(event) => setDraft({ ...draft, imageUrl: event.target.value })} />
+          {isValidImageUrl(draft.imageUrl) ? (
+            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-white/10 bg-black">
+              <Image alt={draft.name || "Category preview"} className="object-cover" fill sizes="(min-width: 640px) 520px, 100vw" src={draft.imageUrl} />
+            </div>
+          ) : null}
           <textarea className="min-h-24 w-full rounded-xl border border-slate-200 p-4" placeholder="Description" value={draft.description} onChange={(event) => setDraft({ ...draft, description: event.target.value })} />
           <input className="h-12 w-full rounded-xl border border-slate-200 px-4" type="number" value={draft.sortOrder} onChange={(event) => setDraft({ ...draft, sortOrder: Number(event.target.value) })} />
           <label className="flex items-center gap-3 text-sm text-[#d7e7f8]"><input checked={draft.isActive} type="checkbox" onChange={(event) => setDraft({ ...draft, isActive: event.target.checked })} /> Active</label>

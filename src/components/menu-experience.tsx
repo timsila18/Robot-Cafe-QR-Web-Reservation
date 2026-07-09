@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CategoryFilter } from "@/components/category-filter";
 import { LoadingSkeleton } from "@/components/loading-skeleton";
@@ -133,6 +134,13 @@ export function MenuExperience({ branch, categories, items }: MenuExperienceProp
     ? filteredItems.slice(0, 5).map((item) => item.name)
     : activeItems.filter((item) => item.isBestSeller || item.isFeatured).slice(0, 5).map((item) => item.name);
 
+  const categoryTiles = activeCategories
+    .map((category) => ({
+      category,
+      itemCount: activeItems.filter((item) => item.categoryId === category.id).length,
+    }))
+    .filter((entry) => entry.itemCount > 0);
+
   return (
     <>
       <section className="mx-auto w-full max-w-7xl overflow-hidden px-5 pb-20 pt-8 sm:px-8">
@@ -157,6 +165,39 @@ export function MenuExperience({ branch, categories, items }: MenuExperienceProp
             ) : null}
           </div>
         </div>
+
+        {query.trim().length === 0 ? (
+          <section className="mt-8">
+            <div className="mb-5 flex items-end justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-black text-white">Explore Categories</h2>
+                <p className="mt-1 text-sm font-medium text-[#d7e7f8]">Image-led menu sections for a richer QR browsing experience.</p>
+              </div>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {categoryTiles.map(({ category, itemCount }) => (
+                <button
+                  className="group relative aspect-[4/3] overflow-hidden rounded-[22px] border border-white/10 bg-[#06111f] text-left shadow-[0_20px_70px_rgba(0,0,0,.24)] transition hover:-translate-y-1 hover:border-gold/60"
+                  key={category.id}
+                  type="button"
+                  onClick={() => handleCategory(category.id)}
+                >
+                  {category.imageUrl ? (
+                    <Image alt={category.name} className="object-cover transition duration-500 group-hover:scale-105" fill sizes="(min-width: 1280px) 28vw, (min-width: 640px) 44vw, 100vw" src={category.imageUrl} />
+                  ) : (
+                    <div className="h-full bg-[radial-gradient(circle_at_30%_20%,rgba(216,169,40,.25),transparent_34%),linear-gradient(135deg,#06111f,#08213a)]" />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/86 via-black/25 to-transparent" />
+                  <div className="absolute inset-x-0 bottom-0 p-5">
+                    <p className="text-xs font-bold uppercase tracking-[0.24em] text-gold">{itemCount} selections</p>
+                    <h3 className="mt-2 text-2xl font-black text-white">{category.name}</h3>
+                    {category.description ? <p className="mt-2 line-clamp-2 text-sm font-medium text-[#d7e7f8]">{category.description}</p> : null}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         <div className="sticky top-20 z-30 mt-8 w-[calc(100vw-2.5rem)] min-w-0 max-w-full rounded-2xl border border-white/10 bg-[#04101c]/88 px-3 shadow-[0_16px_45px_rgba(0,0,0,.24)] backdrop-blur-xl sm:w-full">
           <CategoryFilter categories={activeCategories} selectedCategory={selectedCategory} onSelect={handleCategory} />

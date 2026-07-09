@@ -84,6 +84,7 @@ export const categorySchema = z.object({
   name: z.string().min(2).max(80),
   slug,
   description: z.string().max(240).optional().default(""),
+  imageUrl: z.string().url().optional().or(z.literal("")).default(""),
   sortOrder: z.coerce.number().int().min(0),
   isActive: z.coerce.boolean(),
 });

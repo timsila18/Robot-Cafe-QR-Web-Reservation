@@ -99,10 +99,28 @@ const toCategory = (row: Record<string, unknown>): AdminCategory => ({
   name: String(row.name),
   slug: String(row.slug),
   description: String(row.description ?? ""),
+  imageUrl: String(row.image_url ?? ""),
   sortOrder: Number(row.sort_order ?? 0),
   isActive: Boolean(row.is_active),
   updatedAt: String(row.updated_at ?? row.created_at ?? now()),
 });
+
+const categoryPayload = (input: CategoryInput) => ({
+  name: input.name,
+  slug: input.slug,
+  description: input.description,
+  image_url: input.imageUrl || null,
+  sort_order: input.sortOrder,
+  is_active: input.isActive,
+});
+
+const categoryPayloadWithoutImage = (input: CategoryInput) => {
+  const { image_url: _imageUrl, ...payload } = categoryPayload(input);
+  void _imageUrl;
+  return payload;
+};
+
+const isMissingImageColumnError = (message: string) => message.toLowerCase().includes("image_url");
 
 const toImage = (row: Record<string, unknown>): AdminImage => ({
   id: String(row.id),
@@ -387,15 +405,15 @@ export async function createCategory(input: CategoryInput) {
   }
   const { data, error } = await supabase
     .from("categories")
-    .insert({
-      name: input.name,
-      slug: input.slug,
-      description: input.description,
-      sort_order: input.sortOrder,
-      is_active: input.isActive,
-    })
+    .insert(categoryPayload(input))
     .select("*")
     .single();
+  if (error && isMissingImageColumnError(error.message)) {
+    const fallback = await supabase.from("categories").insert(categoryPayloadWithoutImage(input)).select("*").single();
+    if (fallback.error) throw new Error(`Unable to create category: ${fallback.error.message}`);
+    await logActivity("Category Created", "categories", fallback.data.id);
+    return toCategory(fallback.data);
+  }
   if (error) throw new Error(`Unable to create category: ${error.message}`);
   await logActivity("Category Created", "categories", data.id);
   return toCategory(data);
@@ -420,16 +438,16 @@ export async function updateCategory(categoryId: string, input: CategoryInput) {
   }
   const { data, error } = await supabase
     .from("categories")
-    .update({
-      name: input.name,
-      slug: input.slug,
-      description: input.description,
-      sort_order: input.sortOrder,
-      is_active: input.isActive,
-    })
+    .update(categoryPayload(input))
     .eq("id", categoryId)
     .select("*")
     .single();
+  if (error && isMissingImageColumnError(error.message)) {
+    const fallback = await supabase.from("categories").update(categoryPayloadWithoutImage(input)).eq("id", categoryId).select("*").single();
+    if (fallback.error) throw new Error(`Unable to update category: ${fallback.error.message}`);
+    await logActivity("Category Updated", "categories", categoryId);
+    return toCategory(fallback.data);
+  }
   if (error) throw new Error(`Unable to update category: ${error.message}`);
   await logActivity("Category Updated", "categories", categoryId);
   return toCategory(data);

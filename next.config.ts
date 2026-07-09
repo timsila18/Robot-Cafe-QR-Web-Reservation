@@ -21,6 +21,10 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
+        hostname: "qr.robotcafe.co.ke",
+      },
+      {
+        protocol: "https",
         hostname: "pyifclbmiqikylmvreht.supabase.co",
       },
     ],
