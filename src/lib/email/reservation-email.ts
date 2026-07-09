@@ -1,4 +1,4 @@
-import { branches } from "@/lib/demo-data";
+import { listAdminState } from "@/lib/admin-store";
 import type { ReservationRecord } from "@/lib/reservations";
 
 export type SendReservationEmailResult = {
@@ -18,8 +18,9 @@ const escapeHtml = (value: string | number | undefined) =>
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
 
-export function reservationRecipientForBranch(branchId: string) {
-  const branch = branches.find((entry) => entry.id === branchId);
+export async function reservationRecipientForBranch(branchId: string) {
+  const { branches } = await listAdminState();
+  const branch = branches.find((entry) => entry.id === branchId || entry.slug === branchId);
   if (!branch) throw new Error("Reservation branch not found.");
   return {
     branch,
@@ -70,7 +71,7 @@ export async function sendReservationEmail(reservation: ReservationRecord): Prom
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.RESERVATION_FROM_EMAIL || "Robot Cafe <onboarding@resend.dev>";
   const requireEmail = process.env.REQUIRE_RESERVATION_EMAIL === "true";
-  const { branch, recipient } = reservationRecipientForBranch(reservation.branchId);
+  const { branch, recipient } = await reservationRecipientForBranch(reservation.branchId);
   const branchName = branch.name.replace("Robot Cafe - ", "");
 
   if (!apiKey) {
