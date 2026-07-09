@@ -1,6 +1,6 @@
 import { deleteMenuItem, listAdminState, updateMenuItem } from "@/lib/admin-store";
 import { fail, ok } from "@/lib/api-response";
-import { menuItemSchema } from "@/lib/validation";
+import { menuItemSchema, type MenuItemInput } from "@/lib/validation";
 
 type RouteContext = {
   params: Promise<{
@@ -8,18 +8,29 @@ type RouteContext = {
   }>;
 };
 
+async function normalizeBranchAssignments(input: MenuItemInput): Promise<MenuItemInput> {
+  const branches = (await listAdminState()).branches;
+  const branchSlugByReference = new Map<string, string>();
+
+  branches.forEach((branch) => {
+    branchSlugByReference.set(branch.id, branch.slug);
+    branchSlugByReference.set(branch.slug, branch.slug);
+  });
+
+  const normalizedBranches = input.availableBranches.map((branchReference) => {
+    const slug = branchSlugByReference.get(branchReference);
+    if (!slug) throw new Error(`Invalid branch assignment: ${branchReference}`);
+    return slug;
+  });
+
+  return { ...input, availableBranches: [...new Set(normalizedBranches)] };
+}
+
 export async function PATCH(request: Request, context: RouteContext) {
   try {
     const { itemId } = await context.params;
     const input = menuItemSchema.parse(await request.json());
-    const branchSlugs = new Set((await listAdminState()).branches.map((branch) => branch.slug));
-    const invalidBranch = input.availableBranches.find((branchSlug) => !branchSlugs.has(branchSlug));
-
-    if (invalidBranch) {
-      throw new Error(`Invalid branch assignment: ${invalidBranch}`);
-    }
-
-    return ok(await updateMenuItem(itemId, input));
+    return ok(await updateMenuItem(itemId, await normalizeBranchAssignments(input)));
   } catch (error) {
     return fail(error);
   }

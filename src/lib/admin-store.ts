@@ -225,21 +225,31 @@ async function syncMenuItemImages(menuItemId: string, images: AdminImage[]) {
   if (error) throw new Error(`Unable to save menu images: ${error.message}`);
 }
 
-async function syncMenuItemBranches(menuItemId: string, branchSlugs: string[]) {
+async function syncMenuItemBranches(menuItemId: string, branchReferences: string[]) {
   const supabase = requireSupabase();
-  const { data: branchRows, error: branchError } = await supabase.from("branches").select("id, slug").in("slug", branchSlugs);
+  const { data: allBranches, error: branchError } = await supabase.from("branches").select("id, slug");
   if (branchError) throw new Error(`Unable to validate branches: ${branchError.message}`);
 
-  const foundSlugs = new Set(branchRows.map((branch) => String(branch.slug)));
-  const invalidBranch = branchSlugs.find((slug) => !foundSlugs.has(slug));
-  if (invalidBranch) throw new Error(`Invalid branch assignment: ${invalidBranch}`);
+  const branchByReference = new Map<string, { id: string; slug: string }>();
+  allBranches.forEach((branch) => {
+    branchByReference.set(String(branch.id), { id: String(branch.id), slug: String(branch.slug) });
+    branchByReference.set(String(branch.slug), { id: String(branch.id), slug: String(branch.slug) });
+  });
+
+  const branchRows = branchReferences.map((branchReference) => {
+    const branch = branchByReference.get(branchReference);
+    if (!branch) throw new Error(`Invalid branch assignment: ${branchReference}`);
+    return branch;
+  });
+
+  const uniqueBranchRows = Array.from(new Map(branchRows.map((branch) => [branch.id, branch])).values());
 
   const { error: deleteError } = await supabase.from("menu_item_branch_availability").delete().eq("menu_item_id", menuItemId);
   if (deleteError) throw new Error(`Unable to replace branch availability: ${deleteError.message}`);
-  if (!branchRows.length) return;
+  if (!uniqueBranchRows.length) return;
 
   const { error } = await supabase.from("menu_item_branch_availability").insert(
-    branchRows.map((branch) => ({
+    uniqueBranchRows.map((branch) => ({
       menu_item_id: menuItemId,
       branch_id: branch.id,
       is_available: true,
