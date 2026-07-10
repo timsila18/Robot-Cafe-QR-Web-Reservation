@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import type { AdminCategory, AdminMenuItem } from "@/lib/admin-store";
 import { canUseDemoPersistence, readDemoCategories, saveDemoCategories } from "@/lib/demo-persistence";
 import { compressImage } from "@/lib/images/image-compression";
@@ -215,12 +216,29 @@ function CategoryEditor({ category, onClose, onSave }: { category: AdminCategory
   const [draft, setDraft] = useState(category);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setDraft(category);
     setUploading(false);
     setUploadError("");
   }, [category]);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    const previousScrollBehavior = document.documentElement.style.scrollBehavior;
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.scrollBehavior = "auto";
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.documentElement.style.scrollBehavior = previousScrollBehavior;
+    };
+  }, []);
 
   const handleCategoryPhoto = async (file: File) => {
     const validation = validateImageFile(file);
@@ -248,10 +266,10 @@ function CategoryEditor({ category, onClose, onSave }: { category: AdminCategory
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-[80] overflow-y-auto bg-slate-950/70 p-3 backdrop-blur-sm sm:p-6">
-      <div className="mx-auto flex min-h-full w-full max-w-xl items-start sm:items-center">
-        <div className="my-4 max-h-[calc(100svh-2rem)] w-full overflow-y-auto rounded-2xl border border-gold/20 bg-[#06111f] p-5 text-white shadow-2xl sm:my-8 sm:max-h-[calc(100svh-4rem)] sm:p-6">
+  const editor = (
+    <div className="fixed inset-0 z-[999] grid place-items-center overflow-hidden bg-slate-950/78 p-3 backdrop-blur-sm sm:p-6">
+      <div className="w-full max-w-xl">
+        <div className="max-h-[calc(100svh-1.5rem)] w-full overflow-y-auto rounded-2xl border border-gold/20 bg-[#06111f] p-5 text-white shadow-2xl sm:max-h-[calc(100svh-3rem)] sm:p-6">
           <h3 className="text-2xl font-semibold text-white">{draft.id ? "Edit Category" : "Create Category"}</h3>
           <p className="mt-2 text-sm text-[#9fb3c8]">Add a clean category with a premium photo for the customer menu.</p>
           <div className="mt-5 space-y-4">
@@ -314,4 +332,7 @@ function CategoryEditor({ category, onClose, onSave }: { category: AdminCategory
       </div>
     </div>
   );
+
+  if (!mounted) return null;
+  return createPortal(editor, document.body);
 }
