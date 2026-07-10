@@ -5,7 +5,12 @@ export const demoBranchStorageKey = "robot-cafe-admin-branches";
 export const demoCategoryStorageKey = "robot-cafe-admin-categories";
 export const demoMenuStorageKey = "robot-cafe-admin-menu-items";
 
+function isDemoPersistenceEnabled() {
+  return process.env.NEXT_PUBLIC_ENABLE_DEMO_PERSISTENCE === "true";
+}
+
 export function canUseDemoPersistence(error: unknown) {
+  if (!isDemoPersistenceEnabled()) return false;
   const message = String(error ?? "").toLowerCase();
   return message.includes("database persistence is not configured") || message.includes("invalid input syntax for type uuid");
 }
@@ -58,6 +63,14 @@ export function toPublicMenuItems(items: AdminMenuItem[]): MenuItem[] {
 
 function readDemoList<T>(key: string, fallback: T[]) {
   if (typeof window === "undefined") return fallback;
+  if (!isDemoPersistenceEnabled()) {
+    try {
+      window.localStorage.removeItem(key);
+    } catch {
+      // Ignore blocked storage. Supabase is the production source of truth.
+    }
+    return fallback;
+  }
   try {
     const raw = window.localStorage.getItem(key);
     if (!raw) return fallback;
@@ -70,6 +83,14 @@ function readDemoList<T>(key: string, fallback: T[]) {
 
 function saveDemoList<T>(key: string, values: T[]) {
   if (typeof window === "undefined") return;
+  if (!isDemoPersistenceEnabled()) {
+    try {
+      window.localStorage.removeItem(key);
+    } catch {
+      // Ignore blocked storage. Supabase is the production source of truth.
+    }
+    return;
+  }
   try {
     window.localStorage.setItem(key, JSON.stringify(values));
   } catch {
