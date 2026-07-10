@@ -64,11 +64,6 @@ export function toPublicMenuItems(items: AdminMenuItem[]): MenuItem[] {
 function readDemoList<T>(key: string, fallback: T[]) {
   if (typeof window === "undefined") return fallback;
   if (!isDemoPersistenceEnabled()) {
-    try {
-      window.localStorage.removeItem(key);
-    } catch {
-      // Ignore blocked storage. Supabase is the production source of truth.
-    }
     return fallback;
   }
   try {
@@ -84,11 +79,6 @@ function readDemoList<T>(key: string, fallback: T[]) {
 function saveDemoList<T>(key: string, values: T[]) {
   if (typeof window === "undefined") return;
   if (!isDemoPersistenceEnabled()) {
-    try {
-      window.localStorage.removeItem(key);
-    } catch {
-      // Ignore blocked storage. Supabase is the production source of truth.
-    }
     return;
   }
   try {
