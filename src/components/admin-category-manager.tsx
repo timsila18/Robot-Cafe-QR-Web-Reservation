@@ -4,6 +4,9 @@ import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import type { AdminCategory, AdminMenuItem } from "@/lib/admin-store";
 import { canUseDemoPersistence, readDemoCategories, saveDemoCategories } from "@/lib/demo-persistence";
+import { compressImage } from "@/lib/images/image-compression";
+import { uploadImage } from "@/lib/images/image-storage";
+import { validateImageFile } from "@/lib/images/image-validation";
 
 const slugify = (value: string) =>
   value
@@ -188,6 +191,34 @@ function uniqueCategoryId(categories: AdminCategory[], value: string) {
 
 function CategoryEditor({ category, onClose, onSave }: { category: AdminCategory; onClose: () => void; onSave: (category: AdminCategory) => void }) {
   const [draft, setDraft] = useState(category);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+
+  const handleCategoryPhoto = async (file: File) => {
+    const validation = validateImageFile(file);
+    if (!validation.ok) {
+      setUploadError(validation.error);
+      return;
+    }
+
+    try {
+      setUploading(true);
+      setUploadError("");
+      const bundle = await compressImage(file);
+      const uploaded = await uploadImage({
+        file,
+        bundle,
+        menuItemId: `category-${slugify(draft.slug || draft.name || "photo")}`,
+        sortOrder: 1,
+        isPrimary: true,
+      });
+      setDraft((current) => ({ ...current, imageUrl: uploaded.cardUrl || uploaded.imageUrl }));
+    } catch (error) {
+      setUploadError(error instanceof Error ? error.message : "Unable to upload category photo.");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/60 p-3 backdrop-blur-sm sm:p-6">
@@ -198,12 +229,51 @@ function CategoryEditor({ category, onClose, onSave }: { category: AdminCategory
           <div className="mt-5 space-y-4">
           <input className="h-12 w-full rounded-xl border border-slate-200 px-4" placeholder="Name" value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value, slug: slugify(event.target.value) })} />
           <input className="h-12 w-full rounded-xl border border-slate-200 px-4" placeholder="Slug" value={draft.slug} onChange={(event) => setDraft({ ...draft, slug: slugify(event.target.value) })} />
-          <input className="h-12 w-full rounded-xl border border-slate-200 px-4" placeholder="Category image URL from cPanel" value={draft.imageUrl ?? ""} onChange={(event) => setDraft({ ...draft, imageUrl: event.target.value })} />
-          {isValidImageUrl(draft.imageUrl) ? (
-            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-white/10 bg-black">
-              <Image alt={draft.name || "Category preview"} className="object-cover" fill sizes="(min-width: 640px) 520px, 100vw" src={draft.imageUrl} />
+          <div
+            className="rounded-2xl border border-dashed border-gold/35 bg-white/5 p-4"
+            onDragOver={(event) => event.preventDefault()}
+            onDrop={(event) => {
+              event.preventDefault();
+              const file = event.dataTransfer.files?.[0];
+              if (file) void handleCategoryPhoto(file);
+            }}
+          >
+            {isValidImageUrl(draft.imageUrl) ? (
+              <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-white/10 bg-black">
+                <Image alt={draft.name || "Category preview"} className="object-cover" fill sizes="(min-width: 640px) 520px, 100vw" src={draft.imageUrl} />
+              </div>
+            ) : (
+              <div className="grid aspect-[4/3] place-items-center rounded-2xl border border-white/10 bg-[radial-gradient(circle_at_30%_20%,rgba(216,169,40,.24),transparent_34%),linear-gradient(135deg,#06111f,#08213a)] text-center">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.24em] text-gold">Category Photo</p>
+                  <p className="mt-2 text-sm text-[#9fb3c8]">Drop a real Robot Cafe photo here</p>
+                </div>
+              </div>
+            )}
+            {uploadError ? <p className="mt-3 rounded-xl border border-red-400/35 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-100">{uploadError}</p> : null}
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+              <label className="premium-button flex-1 cursor-pointer text-center">
+                {uploading ? "Uploading..." : draft.imageUrl ? "Replace Photo" : "Upload Photo"}
+                <input
+                  accept="image/jpeg,image/jpg,image/png,image/webp"
+                  className="sr-only"
+                  disabled={uploading}
+                  type="file"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    if (file) void handleCategoryPhoto(file);
+                    event.currentTarget.value = "";
+                  }}
+                />
+              </label>
+              {draft.imageUrl ? (
+                <button className="ghost-button" disabled={uploading} type="button" onClick={() => setDraft({ ...draft, imageUrl: "" })}>
+                  Remove Photo
+                </button>
+              ) : null}
             </div>
-          ) : null}
+            <p className="mt-3 text-xs text-[#9fb3c8]">JPG, PNG, or WEBP up to 20MB. The file is optimized and stored in Robot Cafe cPanel under qr-menu-images.</p>
+          </div>
           <textarea className="min-h-24 w-full rounded-xl border border-slate-200 p-4" placeholder="Description" value={draft.description} onChange={(event) => setDraft({ ...draft, description: event.target.value })} />
           <input className="h-12 w-full rounded-xl border border-slate-200 px-4" type="number" value={draft.sortOrder} onChange={(event) => setDraft({ ...draft, sortOrder: Number(event.target.value) })} />
           <label className="flex items-center gap-3 text-sm text-[#d7e7f8]"><input checked={draft.isActive} type="checkbox" onChange={(event) => setDraft({ ...draft, isActive: event.target.checked })} /> Active</label>
