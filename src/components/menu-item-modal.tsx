@@ -3,16 +3,18 @@
 import Image from "next/image";
 import { useMemo, useState } from "react";
 import { AvailabilityBadge, FeaturedBadge, StatusBadge } from "@/components/badges";
-import { branches, formatPrice, getCategoryById, menuItems, type Branch, type MenuItem } from "@/lib/demo-data";
+import { formatPrice, type Branch, type Category, type MenuItem } from "@/lib/demo-data";
 import { getOptimizedImageUrl, getPrimaryImage, imageAlt, robotCafeImageFallback } from "@/lib/images/image-utils";
 
 type MenuItemModalProps = {
-  item: MenuItem | null;
   branch: Branch;
+  categories: Category[];
+  item: MenuItem | null;
+  items: MenuItem[];
   onClose: () => void;
 };
 
-export function MenuItemModal({ item, branch, onClose }: MenuItemModalProps) {
+export function MenuItemModal({ item, branch, categories, items, onClose }: MenuItemModalProps) {
   const [activeSelection, setActiveSelection] = useState({ itemId: "", imageId: "" });
   const gallery = useMemo(() => (item?.images.length ? [...item.images].sort((a, b) => a.sortOrder - b.sortOrder) : []), [item]);
   const primaryImage = getPrimaryImage(gallery);
@@ -23,13 +25,10 @@ export function MenuItemModal({ item, branch, onClose }: MenuItemModalProps) {
     return null;
   }
 
-  const category = getCategoryById(item.categoryId);
+  const category = categories.find((entry) => entry.id === item.categoryId);
   const detailUrl = getOptimizedImageUrl(activeImage, "detail");
-  const availableBranchNames = branches
-    .filter((availableBranch) => item.availableBranches.includes(availableBranch.slug))
-    .map((availableBranch) => availableBranch.name.replace("Robot Cafe - ", ""))
-    .join(", ");
-  const relatedItems = menuItems
+  const availableBranchNames = item.availableBranches.join(", ");
+  const relatedItems = items
     .filter((entry) => entry.id !== item.id && entry.categoryId === item.categoryId && entry.availableBranches.includes(branch.slug))
     .slice(0, 3);
 

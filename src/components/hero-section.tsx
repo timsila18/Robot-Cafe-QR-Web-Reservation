@@ -10,6 +10,14 @@ type HeroSectionProps = {
   primaryLabel: string;
   secondaryHref?: string;
   secondaryLabel?: string;
+  featuredItem?: {
+    badge: string;
+    branchName: string;
+    description: string;
+    imageUrl?: string;
+    name: string;
+    price: string;
+  };
 };
 
 export function HeroSection({
@@ -20,7 +28,16 @@ export function HeroSection({
   primaryLabel,
   secondaryHref,
   secondaryLabel,
+  featuredItem,
 }: HeroSectionProps) {
+  const displayItem = featuredItem ?? {
+    badge: "Live Menu",
+    branchName: "Robot Cafe",
+    description: "Fresh selections appear here as soon as the admin publishes the menu.",
+    name: "Live Menu Ready",
+    price: "QR Powered",
+  };
+
   return (
     <section className="relative mx-auto grid min-h-[72svh] w-full max-w-7xl items-center gap-12 px-5 py-12 sm:px-8 lg:grid-cols-[1fr_0.82fr]">
       <div className="premium-orbit -left-28 top-24 size-80 opacity-60" />
@@ -57,12 +74,24 @@ export function HeroSection({
               <span className="text-gold">QR Ready</span>
             </div>
             <div className="absolute bottom-5 left-5 right-5 rounded-xl border border-gold/18 bg-black/48 p-4 shadow-[0_18px_50px_rgba(0,0,0,.34)] backdrop-blur-xl">
-              <p className="text-sm text-[#b8d8ff]">Branch selected</p>
-              <p className="mt-2 text-3xl font-black text-white">Reserve Cappuccino</p>
-              <p className="mt-3 text-sm leading-6 text-[#d7e7f8]">Velvety espresso, microfoam, and cocoa finish.</p>
+              {displayItem.imageUrl ? (
+                <div className="relative mb-4 aspect-[16/9] overflow-hidden rounded-lg border border-white/10 bg-black/30">
+                  <Image
+                    alt={displayItem.name}
+                    className="object-cover"
+                    fill
+                    sizes="(min-width: 1024px) 430px, 80vw"
+                    src={displayItem.imageUrl}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/45" />
+                </div>
+              ) : null}
+              <p className="text-sm text-[#b8d8ff]">{displayItem.branchName}</p>
+              <p className="mt-2 text-3xl font-black text-white">{displayItem.name}</p>
+              <p className="mt-3 line-clamp-2 text-sm leading-6 text-[#d7e7f8]">{displayItem.description}</p>
               <div className="mt-8 flex items-center justify-between">
-                <span className="text-2xl font-black text-gold">KES 420</span>
-                <span className="rounded-md border border-gold/35 bg-gold/12 px-3 py-2 text-xs font-bold text-[#fff2bf]">Featured</span>
+                <span className="text-2xl font-black text-gold">{displayItem.price}</span>
+                <span className="rounded-md border border-gold/35 bg-gold/12 px-3 py-2 text-xs font-bold text-[#fff2bf]">{displayItem.badge}</span>
               </div>
             </div>
           </div>

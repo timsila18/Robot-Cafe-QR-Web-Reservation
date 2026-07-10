@@ -14,6 +14,9 @@ export default async function Home() {
   const branches = state.branches.filter((branch) => branch.isActive);
   const menuItems = state.menuItems.filter((item) => item.isActive);
   const showcaseItems = menuItems.filter((item) => item.isFeatured || item.isBestSeller).slice(0, 4);
+  const heroMenuItem = showcaseItems[0] ?? menuItems[0];
+  const heroMenuImage = heroMenuItem ? getOptimizedImageUrl(getPrimaryImage(heroMenuItem.images), "card") : "";
+  const heroBranch = heroMenuItem ? branches.find((branch) => heroMenuItem.availableBranches.includes(branch.slug)) : undefined;
 
   return (
     <PublicLayout>
@@ -25,6 +28,14 @@ export default async function Home() {
         primaryLabel="Open Digital Menu"
         secondaryHref="/admin"
         secondaryLabel="View Admin"
+        featuredItem={heroMenuItem ? {
+          badge: heroMenuItem.isFeatured ? "Featured" : heroMenuItem.isBestSeller ? "Best Seller" : "Live Menu",
+          branchName: heroBranch?.name.replace("Robot Cafe - ", "") ?? "Robot Cafe",
+          description: heroMenuItem.shortDescription || heroMenuItem.description,
+          imageUrl: heroMenuImage.startsWith("data:") ? undefined : heroMenuImage,
+          name: heroMenuItem.name,
+          price: formatPrice(heroMenuItem.price),
+        } : undefined}
       />
 
       <section className="mx-auto w-full max-w-7xl px-5 pb-5 pt-2 sm:px-8">

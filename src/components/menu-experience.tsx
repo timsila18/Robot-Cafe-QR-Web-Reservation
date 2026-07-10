@@ -234,7 +234,7 @@ export function MenuExperience({ branch, categories, items }: MenuExperienceProp
                   </div>
                   <Link className="hidden text-sm font-bold text-[#6dc6ff] sm:block" href="/feedback">Share feedback</Link>
                 </div>
-                <MenuGrid items={sectionItems} onViewDetails={(item) => { track({ itemId: item.id, categoryId: item.categoryId }); setSelectedItem(item); }} />
+                <MenuGrid categories={activeCategories} items={sectionItems} onViewDetails={(item) => { track({ itemId: item.id, categoryId: item.categoryId }); setSelectedItem(item); }} />
               </section>
             ))}
           </div>
@@ -248,7 +248,7 @@ export function MenuExperience({ branch, categories, items }: MenuExperienceProp
             </div>
           </div>
           <div className="w-[calc(100vw-2.5rem)] min-w-0 max-w-full sm:w-full">
-            {isLoading ? <LoadingSkeleton /> : <MenuGrid items={filteredItems} onViewDetails={(item) => { track({ itemId: item.id, categoryId: item.categoryId }); setSelectedItem(item); }} />}
+            {isLoading ? <LoadingSkeleton /> : <MenuGrid categories={activeCategories} items={filteredItems} onViewDetails={(item) => { track({ itemId: item.id, categoryId: item.categoryId }); setSelectedItem(item); }} />}
           </div>
         </div>
 
@@ -262,7 +262,7 @@ export function MenuExperience({ branch, categories, items }: MenuExperienceProp
                   <h2 className="text-2xl font-black text-white">{category.name}</h2>
                   <p className="mt-1 text-sm font-medium text-[#d7e7f8]">{categoryItems.length} branch-ready selections.</p>
                 </div>
-                <MenuGrid items={categoryItems} onViewDetails={(item) => { track({ itemId: item.id, categoryId: item.categoryId }); setSelectedItem(item); }} />
+                <MenuGrid categories={activeCategories} items={categoryItems} onViewDetails={(item) => { track({ itemId: item.id, categoryId: item.categoryId }); setSelectedItem(item); }} />
               </section>
             );
           })}
@@ -279,7 +279,7 @@ export function MenuExperience({ branch, categories, items }: MenuExperienceProp
           </div>
         </div>
       </section>
-      <MenuItemModal branch={branch} item={selectedItem} onClose={() => setSelectedItem(null)} />
+      <MenuItemModal branch={branch} categories={activeCategories} items={activeItems} item={selectedItem} onClose={() => setSelectedItem(null)} />
     </>
   );
 }

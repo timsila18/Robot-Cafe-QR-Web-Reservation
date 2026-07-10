@@ -1,15 +1,15 @@
 import Image from "next/image";
 import { AvailabilityBadge, FeaturedBadge, StatusBadge } from "@/components/badges";
-import { formatPrice, getCategoryById, type MenuItem } from "@/lib/demo-data";
+import { formatPrice, type Category, type MenuItem } from "@/lib/demo-data";
 import { getOptimizedImageUrl, getPrimaryImage, imageAlt, robotCafeImageFallback } from "@/lib/images/image-utils";
 
 type MenuItemCardProps = {
+  category?: Category;
   item: MenuItem;
   onViewDetails: (item: MenuItem) => void;
 };
 
-export function MenuItemCard({ item, onViewDetails }: MenuItemCardProps) {
-  const category = getCategoryById(item.categoryId);
+export function MenuItemCard({ category, item, onViewDetails }: MenuItemCardProps) {
   const primaryImage = getPrimaryImage(item.images);
   const imageUrl = getOptimizedImageUrl(primaryImage, "card");
 

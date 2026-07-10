@@ -169,16 +169,16 @@ export function AdminCategoryManager({
               <p className="mt-3 text-sm text-slate-500">{categoryMenuItems.filter((item) => item.categoryId === category.id).length} menu items</p>
               <p className="mt-2 text-sm text-slate-500">{category.description}</p>
               <div className="mt-5 flex flex-wrap gap-3 text-sm">
-              <button className="text-gold" type="button" onClick={() => setEditing(category)}>Edit</button>
-              <button className="text-slate-500" type="button" onClick={() => void save({ ...category, isActive: !category.isActive })}>{category.isActive ? "Deactivate" : "Activate"}</button>
-              <button className="text-red-600" type="button" onClick={() => remove(category)}>Delete</button>
+              <button className="rounded-lg border border-gold/35 bg-gold/10 px-3 py-2 font-bold text-gold transition hover:bg-gold/20" type="button" onClick={() => setEditing({ ...category })}>Edit</button>
+              <button className="rounded-lg border border-white/10 bg-white/8 px-3 py-2 font-bold text-slate-200 transition hover:bg-white/12" type="button" onClick={() => void save({ ...category, isActive: !category.isActive })}>{category.isActive ? "Deactivate" : "Activate"}</button>
+              <button className="rounded-lg border border-red-500/35 bg-red-500/10 px-3 py-2 font-bold text-red-300 transition hover:bg-red-500/20" type="button" onClick={() => remove(category)}>Delete</button>
               </div>
             </div>
           </article>
         ))}
       </div>
 
-      {editing ? <CategoryEditor category={editing} onClose={() => setEditing(null)} onSave={save} /> : null}
+      {editing ? <CategoryEditor key={editing.id || "new-category"} category={editing} onClose={() => setEditing(null)} onSave={save} /> : null}
     </div>
   );
 }
@@ -193,6 +193,12 @@ function CategoryEditor({ category, onClose, onSave }: { category: AdminCategory
   const [draft, setDraft] = useState(category);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
+
+  useEffect(() => {
+    setDraft(category);
+    setUploading(false);
+    setUploadError("");
+  }, [category]);
 
   const handleCategoryPhoto = async (file: File) => {
     const validation = validateImageFile(file);
@@ -221,7 +227,7 @@ function CategoryEditor({ category, onClose, onSave }: { category: AdminCategory
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/60 p-3 backdrop-blur-sm sm:p-6">
+    <div className="fixed inset-0 z-[80] overflow-y-auto bg-slate-950/70 p-3 backdrop-blur-sm sm:p-6">
       <div className="mx-auto flex min-h-full w-full max-w-xl items-start sm:items-center">
         <div className="my-4 max-h-[calc(100svh-2rem)] w-full overflow-y-auto rounded-2xl border border-gold/20 bg-[#06111f] p-5 text-white shadow-2xl sm:my-8 sm:max-h-[calc(100svh-4rem)] sm:p-6">
           <h3 className="text-2xl font-semibold text-white">{draft.id ? "Edit Category" : "Create Category"}</h3>
