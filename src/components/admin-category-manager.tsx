@@ -1,6 +1,8 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import type { AdminCategory, AdminMenuItem } from "@/lib/admin-store";
 import { canUseDemoPersistence, readDemoCategories, saveDemoCategories } from "@/lib/demo-persistence";
@@ -27,15 +29,22 @@ const isValidImageUrl = (value?: string) => {
 
 export function AdminCategoryManager({
   initialCategories,
+  initialEditingId,
   menuItems,
 }: {
   initialCategories: AdminCategory[];
+  initialEditingId?: string;
   menuItems: AdminMenuItem[];
 }) {
+  const router = useRouter();
   const [categories, setCategories] = useState(() => readDemoCategories(initialCategories));
   const [categoryMenuItems, setCategoryMenuItems] = useState(menuItems);
   const [query, setQuery] = useState("");
-  const [editing, setEditing] = useState<AdminCategory | null>(null);
+  const [editing, setEditing] = useState<AdminCategory | null>(() => {
+    if (!initialEditingId) return null;
+    if (initialEditingId === "new") return createBlankCategory(initialCategories.length + 1);
+    return initialCategories.find((category) => category.id === initialEditingId) ?? null;
+  });
   const [toast, setToast] = useState("");
 
   const filtered = useMemo(
@@ -86,8 +95,17 @@ export function AdminCategoryManager({
     };
     const nextCategories = isNew ? [savedCategory, ...categories] : categories.map((item) => (item.id === category.id ? savedCategory : item));
     persistCategories(nextCategories);
-    setEditing(null);
+    closeEditor();
     notify(message ?? (isNew ? "Category created in demo storage." : "Category updated in demo storage."));
+  };
+
+  const openEditor = (category: AdminCategory) => {
+    setEditing({ ...category });
+  };
+
+  const closeEditor = () => {
+    setEditing(null);
+    if (initialEditingId) router.replace("/admin/categories");
   };
 
   const save = async (category: AdminCategory) => {
@@ -109,7 +127,7 @@ export function AdminCategoryManager({
     }
 
     persistCategories(isNew ? [payload.data, ...categories] : categories.map((item) => (item.id === category.id ? payload.data : item)));
-    setEditing(null);
+    closeEditor();
     notify(isNew ? "Category created." : "Category updated.");
   };
 
@@ -143,9 +161,9 @@ export function AdminCategoryManager({
           <h2 className="text-3xl font-semibold text-slate-950">Categories</h2>
           <p className="mt-2 text-sm text-slate-500">Create, edit, sort, activate, deactivate, and safely delete categories.</p>
         </div>
-        <button className="premium-button" type="button" onClick={() => setEditing({ id: "", name: "", slug: "", description: "", imageUrl: "", sortOrder: categories.length + 1, isActive: true, updatedAt: new Date().toISOString() })}>
+        <Link className="premium-button" href="/admin/categories/new" onClick={() => openEditor(createBlankCategory(categories.length + 1))}>
           Create Category
-        </button>
+        </Link>
       </div>
 
       <input className="h-12 w-full rounded-xl border border-slate-200 px-4 outline-none focus:border-gold" placeholder="Search categories" value={query} onChange={(event) => setQuery(event.target.value)} />
@@ -169,7 +187,7 @@ export function AdminCategoryManager({
               <p className="mt-3 text-sm text-slate-500">{categoryMenuItems.filter((item) => item.categoryId === category.id).length} menu items</p>
               <p className="mt-2 text-sm text-slate-500">{category.description}</p>
               <div className="mt-5 flex flex-wrap gap-3 text-sm">
-              <button className="rounded-lg border border-gold/35 bg-gold/10 px-3 py-2 font-bold text-gold transition hover:bg-gold/20" type="button" onClick={() => setEditing({ ...category })}>Edit</button>
+              <Link className="rounded-lg border border-gold/35 bg-gold/10 px-3 py-2 font-bold text-gold transition hover:bg-gold/20" href={`/admin/categories/${category.id}`} onClick={() => openEditor(category)}>Edit</Link>
               <button className="rounded-lg border border-white/10 bg-white/8 px-3 py-2 font-bold text-slate-200 transition hover:bg-white/12" type="button" onClick={() => void save({ ...category, isActive: !category.isActive })}>{category.isActive ? "Deactivate" : "Activate"}</button>
               <button className="rounded-lg border border-red-500/35 bg-red-500/10 px-3 py-2 font-bold text-red-300 transition hover:bg-red-500/20" type="button" onClick={() => remove(category)}>Delete</button>
               </div>
@@ -178,9 +196,13 @@ export function AdminCategoryManager({
         ))}
       </div>
 
-      {editing ? <CategoryEditor key={editing.id || "new-category"} category={editing} onClose={() => setEditing(null)} onSave={save} /> : null}
+      {editing ? <CategoryEditor key={editing.id || "new-category"} category={editing} onClose={closeEditor} onSave={save} /> : null}
     </div>
   );
+}
+
+function createBlankCategory(sortOrder: number): AdminCategory {
+  return { id: "", name: "", slug: "", description: "", imageUrl: "", sortOrder, isActive: true, updatedAt: new Date().toISOString() };
 }
 
 function uniqueCategoryId(categories: AdminCategory[], value: string) {
