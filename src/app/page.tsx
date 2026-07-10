@@ -3,14 +3,14 @@ import { Footer } from "@/components/footer";
 import { HeroSection } from "@/components/hero-section";
 import { HomeReservationPanel } from "@/components/home-reservation-panel";
 import { PublicLayout } from "@/components/public-layout";
-import { listAdminState } from "@/lib/admin-store";
 import { formatPrice } from "@/lib/demo-data";
 import { getOptimizedImageUrl, getPrimaryImage } from "@/lib/images/image-utils";
+import { getPublicState } from "@/lib/public-state";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const state = await listAdminState();
+  const state = await getPublicState();
   const branches = state.branches.filter((branch) => branch.isActive);
   const menuItems = state.menuItems.filter((item) => item.isActive);
   const showcaseItems = menuItems.filter((item) => item.isFeatured || item.isBestSeller).slice(0, 4);

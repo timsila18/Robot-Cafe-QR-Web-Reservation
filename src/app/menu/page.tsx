@@ -2,15 +2,17 @@ import { BranchCard } from "@/components/branch-card";
 import { Footer } from "@/components/footer";
 import { HeroSection } from "@/components/hero-section";
 import { PublicLayout } from "@/components/public-layout";
-import { listAdminState } from "@/lib/admin-store";
+import { ServiceUnavailable } from "@/components/service-unavailable";
+import { getPublicState } from "@/lib/public-state";
 
 export const dynamic = "force-dynamic";
 
 export default async function MenuLandingPage() {
-  const { branches } = await listAdminState();
+  const { branches, degraded } = await getPublicState();
 
   return (
     <PublicLayout>
+      {degraded ? <ServiceUnavailable message="The menu database is temporarily unavailable, but branch access and reservations remain available." /> : null}
       <HeroSection
         title="ROBOT CAFE"
         subtitle="Premium Dining Experience"

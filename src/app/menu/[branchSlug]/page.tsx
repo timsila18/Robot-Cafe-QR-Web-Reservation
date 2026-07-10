@@ -2,7 +2,8 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { MenuExperience } from "@/components/menu-experience";
 import { PublicLayout } from "@/components/public-layout";
-import { listAdminState } from "@/lib/admin-store";
+import { ServiceUnavailable } from "@/components/service-unavailable";
+import { getPublicState } from "@/lib/public-state";
 import { toPublicCategories, toPublicMenuItems } from "@/lib/demo-persistence";
 
 type BranchMenuPageProps = {
@@ -15,7 +16,7 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: BranchMenuPageProps): Promise<Metadata> {
   const { branchSlug } = await params;
-  const state = await listAdminState();
+  const state = await getPublicState();
   const branch = state.branches.find((entry) => entry.slug === branchSlug);
   if (!branch) return {};
   return {
@@ -31,7 +32,7 @@ export async function generateMetadata({ params }: BranchMenuPageProps): Promise
 
 export default async function BranchMenuPage({ params }: BranchMenuPageProps) {
   const { branchSlug } = await params;
-  const state = await listAdminState();
+  const state = await getPublicState();
   const branch = state.branches.find((entry) => entry.slug === branchSlug && entry.isActive);
 
   if (!branch) {
@@ -60,7 +61,11 @@ export default async function BranchMenuPage({ params }: BranchMenuPageProps) {
           }),
         }}
       />
-      <MenuExperience branch={publicBranch} categories={activeCategories} items={branchItems} />
+      {state.degraded ? (
+        <ServiceUnavailable message="The live menu database is temporarily unavailable. Please retry in a moment or continue with reservations." />
+      ) : (
+        <MenuExperience branch={publicBranch} categories={activeCategories} items={branchItems} />
+      )}
     </PublicLayout>
   );
 }
