@@ -18,11 +18,11 @@ type MenuExperienceProps = {
 };
 
 export function MenuExperience({ branch, categories, items }: MenuExperienceProps) {
-  const [activeCategories] = useState(() => {
+  const [activeCategories, setActiveCategories] = useState(() => {
     const savedCategories = readDemoCategories([]);
     return savedCategories.length ? toPublicCategories(savedCategories).filter((category) => category.isActive) : categories;
   });
-  const [activeItems] = useState(() => {
+  const [activeItems, setActiveItems] = useState(() => {
     const savedItems = readDemoMenuItems([]);
     return savedItems.length ? toPublicMenuItems(savedItems).filter((item) => item.isActive && item.availableBranches.includes(branch.slug)) : items;
   });
@@ -59,6 +59,26 @@ export function MenuExperience({ branch, categories, items }: MenuExperienceProp
   useEffect(() => {
     track({});
   }, [track]);
+
+  useEffect(() => {
+    let isMounted = true;
+    const refresh = async () => {
+      try {
+        const response = await fetch(`/api/menu/${branch.slug}`, { cache: "no-store" });
+        const payload = await response.json();
+        if (!isMounted || !response.ok) return;
+        if (Array.isArray(payload.data?.categories)) setActiveCategories(payload.data.categories);
+        if (Array.isArray(payload.data?.items)) setActiveItems(payload.data.items);
+      } catch {
+        // Keep the current menu if a background refresh fails.
+      }
+    };
+    const interval = window.setInterval(refresh, 10000);
+    return () => {
+      isMounted = false;
+      window.clearInterval(interval);
+    };
+  }, [branch.slug]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(

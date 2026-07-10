@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { AdminBranch, AdminCategory, AdminImage, AdminMenuItem } from "@/lib/admin-store";
 import { compressImage } from "@/lib/images/image-compression";
 import { canUseDemoPersistence, readDemoBranches, readDemoCategories, readDemoMenuItems, saveDemoMenuItems } from "@/lib/demo-persistence";
@@ -55,8 +55,8 @@ const emptyItem = (categories: AdminCategory[], branches: AdminBranch[]): AdminM
 
 export function AdminMenuManager({ initialItems, categories, branches }: AdminMenuManagerProps) {
   const [items, setItems] = useState(() => readDemoMenuItems(initialItems));
-  const [availableCategories] = useState(() => readDemoCategories(categories));
-  const [availableBranches] = useState(() => readDemoBranches(branches));
+  const [availableCategories, setAvailableCategories] = useState(() => readDemoCategories(categories));
+  const [availableBranches, setAvailableBranches] = useState(() => readDemoBranches(branches));
   const [query, setQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -106,6 +106,35 @@ export function AdminMenuManager({ initialItems, categories, branches }: AdminMe
     setItems(nextItems);
     saveDemoMenuItems(nextItems);
   };
+
+  useEffect(() => {
+    let isMounted = true;
+    const refresh = async () => {
+      try {
+        const [itemsResponse, categoriesResponse, branchesResponse] = await Promise.all([
+          fetch("/api/admin/menu-items", { cache: "no-store" }),
+          fetch("/api/admin/categories", { cache: "no-store" }),
+          fetch("/api/admin/branches", { cache: "no-store" }),
+        ]);
+        const [itemsPayload, categoriesPayload, branchesPayload] = await Promise.all([
+          itemsResponse.json(),
+          categoriesResponse.json(),
+          branchesResponse.json(),
+        ]);
+        if (!isMounted || editing) return;
+        if (itemsResponse.ok && Array.isArray(itemsPayload.data)) setItems(itemsPayload.data);
+        if (categoriesResponse.ok && Array.isArray(categoriesPayload.data)) setAvailableCategories(categoriesPayload.data);
+        if (branchesResponse.ok && Array.isArray(branchesPayload.data)) setAvailableBranches(branchesPayload.data);
+      } catch {
+        // Keep the current view if a background refresh fails.
+      }
+    };
+    const interval = window.setInterval(refresh, 8000);
+    return () => {
+      isMounted = false;
+      window.clearInterval(interval);
+    };
+  }, [editing]);
 
   const saveDemoItem = (item: AdminMenuItem, message?: string): SaveResult => {
     const isNew = !item.id;

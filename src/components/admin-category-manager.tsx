@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { AdminCategory, AdminMenuItem } from "@/lib/admin-store";
 import { canUseDemoPersistence, readDemoCategories, saveDemoCategories } from "@/lib/demo-persistence";
 
@@ -30,6 +30,7 @@ export function AdminCategoryManager({
   menuItems: AdminMenuItem[];
 }) {
   const [categories, setCategories] = useState(() => readDemoCategories(initialCategories));
+  const [categoryMenuItems, setCategoryMenuItems] = useState(menuItems);
   const [query, setQuery] = useState("");
   const [editing, setEditing] = useState<AdminCategory | null>(null);
   const [toast, setToast] = useState("");
@@ -48,6 +49,29 @@ export function AdminCategoryManager({
     setCategories(nextCategories);
     saveDemoCategories(nextCategories);
   };
+
+  useEffect(() => {
+    let isMounted = true;
+    const refresh = async () => {
+      try {
+        const [categoryResponse, itemResponse] = await Promise.all([
+          fetch("/api/admin/categories", { cache: "no-store" }),
+          fetch("/api/admin/menu-items", { cache: "no-store" }),
+        ]);
+        const [categoryPayload, itemPayload] = await Promise.all([categoryResponse.json(), itemResponse.json()]);
+        if (!isMounted || editing) return;
+        if (categoryResponse.ok && Array.isArray(categoryPayload.data)) setCategories(categoryPayload.data);
+        if (itemResponse.ok && Array.isArray(itemPayload.data)) setCategoryMenuItems(itemPayload.data);
+      } catch {
+        // Keep the current view if a background refresh fails.
+      }
+    };
+    const interval = window.setInterval(refresh, 8000);
+    return () => {
+      isMounted = false;
+      window.clearInterval(interval);
+    };
+  }, [editing]);
 
   const saveDemoCategory = (category: AdminCategory, message?: string) => {
     const isNew = !category.id;
@@ -87,7 +111,7 @@ export function AdminCategoryManager({
   };
 
   const remove = async (category: AdminCategory) => {
-    const isReferenced = menuItems.some((item) => item.categoryId === category.id);
+    const isReferenced = categoryMenuItems.some((item) => item.categoryId === category.id);
     if (isReferenced) {
       notify("Category is referenced by menu items. Deactivate it instead.");
       return;
@@ -139,7 +163,7 @@ export function AdminCategoryManager({
             </div>
             <div className="p-5">
               <h3 className="text-2xl font-semibold text-slate-950">{category.name}</h3>
-              <p className="mt-3 text-sm text-slate-500">{menuItems.filter((item) => item.categoryId === category.id).length} menu items</p>
+              <p className="mt-3 text-sm text-slate-500">{categoryMenuItems.filter((item) => item.categoryId === category.id).length} menu items</p>
               <p className="mt-2 text-sm text-slate-500">{category.description}</p>
               <div className="mt-5 flex flex-wrap gap-3 text-sm">
               <button className="text-gold" type="button" onClick={() => setEditing(category)}>Edit</button>
