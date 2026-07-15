@@ -8,6 +8,7 @@ import { LoadingSkeleton } from "@/components/loading-skeleton";
 import { MenuGrid } from "@/components/menu-grid";
 import { MenuItemModal } from "@/components/menu-item-modal";
 import { SearchBar } from "@/components/search-bar";
+import { createClientId } from "@/lib/client-id";
 import type { Branch, Category, MenuItem } from "@/lib/demo-data";
 import { readDemoCategories, readDemoMenuItems, toPublicCategories, toPublicMenuItems } from "@/lib/demo-persistence";
 
@@ -35,10 +36,14 @@ export function MenuExperience({ branch, categories, items }: MenuExperienceProp
   const sessionId = useMemo(() => {
     if (typeof window === "undefined") return "";
     const key = "robot-cafe-session-id";
-    const existing = window.sessionStorage.getItem(key);
-    if (existing) return existing;
-    const next = crypto.randomUUID();
-    window.sessionStorage.setItem(key, next);
+    const next = createClientId("session");
+    try {
+      const existing = window.sessionStorage.getItem(key);
+      if (existing) return existing;
+      window.sessionStorage.setItem(key, next);
+    } catch {
+      return next;
+    }
     return next;
   }, []);
 

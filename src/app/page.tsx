@@ -13,10 +13,21 @@ export default async function Home() {
   const state = await getPublicState();
   const branches = state.branches.filter((branch) => branch.isActive);
   const menuItems = state.menuItems.filter((item) => item.isActive);
-  const showcaseItems = menuItems.filter((item) => item.isFeatured || item.isBestSeller).slice(0, 4);
-  const heroMenuItem = showcaseItems[0] ?? menuItems[0];
-  const heroMenuImage = heroMenuItem ? getOptimizedImageUrl(getPrimaryImage(heroMenuItem.images), "card") : "";
-  const heroBranch = heroMenuItem ? branches.find((branch) => heroMenuItem.availableBranches.includes(branch.slug)) : undefined;
+  const showcaseItems = menuItems.filter((item) => item.isFeatured || item.isBestSeller).slice(0, 6);
+  const visibleShowcaseItems = showcaseItems.length ? showcaseItems : menuItems.slice(0, 6);
+  const heroItems = visibleShowcaseItems.map((item) => {
+    const image = getOptimizedImageUrl(getPrimaryImage(item.images), "card");
+    const branch = branches.find((entry) => item.availableBranches.includes(entry.slug));
+
+    return {
+      badge: item.isFeatured ? "Featured" : item.isBestSeller ? "Best Seller" : "Live Menu",
+      branchName: branch?.name.replace("Robot Cafe - ", "") ?? "Robot Cafe",
+      description: item.shortDescription || item.description,
+      imageUrl: image,
+      name: item.name,
+      price: formatPrice(item.price),
+    };
+  });
 
   return (
     <PublicLayout>
@@ -28,14 +39,7 @@ export default async function Home() {
         primaryLabel="Open Digital Menu"
         secondaryHref="/admin"
         secondaryLabel="View Admin"
-        featuredItem={heroMenuItem ? {
-          badge: heroMenuItem.isFeatured ? "Featured" : heroMenuItem.isBestSeller ? "Best Seller" : "Live Menu",
-          branchName: heroBranch?.name.replace("Robot Cafe - ", "") ?? "Robot Cafe",
-          description: heroMenuItem.shortDescription || heroMenuItem.description,
-          imageUrl: heroMenuImage.startsWith("data:") ? undefined : heroMenuImage,
-          name: heroMenuItem.name,
-          price: formatPrice(heroMenuItem.price),
-        } : undefined}
+        featuredItems={heroItems}
       />
 
       <section className="mx-auto w-full max-w-7xl px-5 pb-5 pt-2 sm:px-8">

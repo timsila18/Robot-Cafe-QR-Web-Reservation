@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import type { AdminBranch, AdminCategory, AdminImage, AdminMenuItem } from "@/lib/admin-store";
+import { createClientId } from "@/lib/client-id";
 import { compressImage } from "@/lib/images/image-compression";
 import { canUseDemoPersistence, readDemoBranches, readDemoCategories, readDemoMenuItems, saveDemoMenuItems } from "@/lib/demo-persistence";
 import { deleteImage, replaceImage, uploadImage } from "@/lib/images/image-storage";
@@ -432,7 +433,7 @@ function MenuItemEditor({
   const addImage = (url: string) => {
     if (!url) return;
     const image: AdminImage = {
-      id: `image-${crypto.randomUUID()}`,
+      id: createClientId("image"),
       imageUrl: url,
       thumbnailUrl: url,
       cardUrl: url,
