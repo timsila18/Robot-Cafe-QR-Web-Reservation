@@ -77,7 +77,7 @@ export function HomeReservationPanel({ branches }: { branches: AdminBranch[] }) 
           <div className="robot-scanline left-0 top-10" />
           <div className="absolute inset-0 grid place-items-center">
             <div className="rounded-3xl border border-[#34b8ff]/45 bg-white p-5 shadow-[0_24px_70px_rgba(0,0,0,.42)]">
-              <BrandMark imageClassName="w-44" />
+              <BrandMark imageClassName="w-56" />
             </div>
           </div>
         </div>

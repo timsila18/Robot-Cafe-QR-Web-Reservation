@@ -55,8 +55,8 @@ export function HeroSection({
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_54%_34%,transparent_0,rgba(2,6,13,.08)_38%,rgba(2,6,13,.78)_100%)]" />
             <div className="robot-scanline left-0 top-16" />
             <div className="relative flex items-center justify-between text-xs uppercase tracking-[0.22em] text-[#b8d8ff]">
-              <span className="rounded-lg border border-[#168df2]/35 bg-white px-3 py-2 shadow-[0_14px_34px_rgba(0,0,0,.3)]">
-                <BrandMark imageClassName="w-28" />
+              <span className="rounded-lg border border-[#168df2]/35 bg-black/22 px-2 py-2 shadow-[0_14px_34px_rgba(0,0,0,.3)] backdrop-blur-md">
+                <BrandMark imageClassName="w-36" />
               </span>
               <span className="text-gold">QR Ready</span>
             </div>

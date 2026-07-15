@@ -37,7 +37,7 @@ export function LoginForm() {
     <div className="mx-auto grid min-h-[76vh] w-full max-w-md place-items-center">
       <form className="luxury-panel w-full overflow-hidden p-0" onSubmit={submit}>
         <div className="premium-surface p-6">
-        <BrandMark />
+        <BrandMark imageClassName="w-52" />
         <h1 className="mt-8 text-3xl font-semibold text-white">Admin Login</h1>
         <p className="mt-2 text-sm leading-6 text-white/64">
           Secure access for Robot Cafe menu operations.

@@ -4,19 +4,22 @@ type BrandMarkProps = {
   className?: string;
   imageClassName?: string;
   priority?: boolean;
+  variant?: "dark" | "light";
 };
 
-export function BrandMark({ className = "", imageClassName = "w-[122px]", priority = true }: BrandMarkProps) {
+export function BrandMark({ className = "", imageClassName = "w-[168px]", priority = true, variant = "dark" }: BrandMarkProps) {
+  const src = variant === "light" ? "/robot-cafe-logo-light.png" : "/robot-cafe-logo-dark.png";
+
   return (
-    <div className={`robot-logo-mark flex items-center ${className}`} aria-label="Robot Cafe">
+    <div className={`robot-logo-mark inline-flex max-w-full items-center ${className}`} aria-label="Robot Cafe">
       <span className="robot-logo-aura" aria-hidden="true" />
       <Image
         alt="Robot Cafe"
-        className={`relative z-10 h-auto ${imageClassName}`}
-        height={40}
+        className={`relative z-10 h-auto max-w-full object-contain ${imageClassName}`}
+        height={257}
         priority={priority}
-        src="/robot-cafe-logo.png"
-        width={112}
+        src={src}
+        width={1202}
       />
     </div>
   );

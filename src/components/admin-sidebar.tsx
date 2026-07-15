@@ -8,8 +8,8 @@ export async function AdminSidebar() {
   const currentUser = await getSessionAdminUser();
   return (
     <aside className="hidden h-screen w-72 shrink-0 overflow-y-auto border-r border-white/10 bg-[#071827]/95 p-5 text-white shadow-2xl lg:sticky lg:top-0 lg:block">
-      <div className="rounded-2xl bg-white p-3 shadow-[0_20px_60px_rgba(0,0,0,.22)]">
-        <BrandMark />
+      <div className="rounded-2xl border border-white/10 bg-black/18 p-2 shadow-[0_20px_60px_rgba(0,0,0,.22)]">
+        <BrandMark imageClassName="w-full" />
       </div>
       <nav className="mt-8 space-y-2 pb-4">
         {adminNavItems.filter(([, , permission]) => !permission || hasPermission(currentUser.role, permission)).map(([label, href]) => (

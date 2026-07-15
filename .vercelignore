@@ -2,6 +2,10 @@
 node_modules
 *.png
 !public/robot-cafe-logo.png
+!public/robot-cafe-logo-dark.png
+!public/robot-cafe-logo-light.png
+!public/robot-cafe-logo-640.png
+!public/robot-cafe-logo-360.png
 !public/icon.png
 !public/apple-icon.png
 !public/robot-cafe-browser-icon.png
