@@ -19,6 +19,13 @@ export const metadata: Metadata = {
     template: "%s | Robot Cafe",
   },
   description: "Premium QR-powered dining and branch operations platform for Robot Cafe.",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.png", type: "image/png", sizes: "512x512" },
+    ],
+    apple: [{ url: "/apple-icon.png", type: "image/png", sizes: "180x180" }],
+  },
   openGraph: {
     title: "Robot Cafe Digital Dining Platform",
     description: "Premium QR-powered dining and branch operations platform for Robot Cafe.",
