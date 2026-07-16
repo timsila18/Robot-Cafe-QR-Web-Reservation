@@ -29,6 +29,21 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [
+          {
+            type: "host",
+            value: "qr.robotcafe.co.ke",
+          },
+        ],
+        destination: "http://www.qr.robotcafe.co.ke/:path*",
+        permanent: false,
+      },
+    ];
+  },
   async headers() {
     return [
       {
