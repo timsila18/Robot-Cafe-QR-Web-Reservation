@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { Footer } from "@/components/footer";
-import { HeroSection } from "@/components/hero-section";
+import { BranchCard } from "@/components/branch-card";
+import { BrandMark } from "@/components/brand-mark";
 import { HomeReservationPanel } from "@/components/home-reservation-panel";
 import { PublicLayout } from "@/components/public-layout";
 import { formatPrice } from "@/lib/demo-data";
@@ -14,33 +15,38 @@ export default async function Home() {
   const branches = state.branches.filter((branch) => branch.isActive);
   const menuItems = state.menuItems.filter((item) => item.isActive);
   const showcaseItems = menuItems.filter((item) => item.isFeatured || item.isBestSeller).slice(0, 6);
-  const visibleShowcaseItems = showcaseItems.length ? showcaseItems : menuItems.slice(0, 6);
-  const heroItems = visibleShowcaseItems.map((item) => {
-    const image = getOptimizedImageUrl(getPrimaryImage(item.images), "card");
-    const branch = branches.find((entry) => item.availableBranches.includes(entry.slug));
-
-    return {
-      badge: item.isFeatured ? "Featured" : item.isBestSeller ? "Best Seller" : "Live Menu",
-      branchName: branch?.name.replace("Robot Cafe - ", "") ?? "Robot Cafe",
-      description: item.shortDescription || item.description,
-      imageUrl: image,
-      name: item.name,
-      price: formatPrice(item.price),
-    };
-  });
 
   return (
     <PublicLayout>
-      <HeroSection
-        title="ROBOT CAFE"
-        subtitle="Premium Dining Experience"
-        description="A polished QR-powered dining platform built for fast branch menus, modern service workflows, and future-ready hospitality operations."
-        primaryHref="/menu"
-        primaryLabel="Open Digital Menu"
-        secondaryHref="/reservations"
-        secondaryLabel="Reserve Table"
-        featuredItems={heroItems}
-      />
+      <section className="relative mx-auto w-full max-w-7xl px-5 pb-8 pt-10 sm:px-8 sm:pt-14" id="branches">
+        <div className="premium-orbit -left-28 top-24 size-80 opacity-60" />
+        <div className="premium-orbit right-8 top-10 size-56 opacity-40" />
+        <div className="absolute inset-x-8 top-20 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
+        <div className="relative z-10 grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
+          <div>
+            <BrandMark imageClassName="w-[190px] sm:w-[240px]" />
+            <p className="mt-8 text-xs font-black uppercase tracking-[0.32em] text-gold">Choose branch</p>
+            <h1 className="mt-4 text-4xl font-black leading-tight text-white sm:text-6xl">Select your Robot Cafe branch.</h1>
+            <p className="mt-5 max-w-2xl text-base font-medium leading-8 text-[#d7e7f8] sm:text-lg">
+              Scan, choose your branch, and open the live menu instantly. Reservations and feedback stay available after you enter.
+            </p>
+          </div>
+          <div className="rounded-[28px] border border-gold/18 bg-black/24 p-4 shadow-[0_35px_110px_rgba(0,0,0,.48)] backdrop-blur-2xl">
+            {branches.length ? (
+              <div className="grid gap-4 sm:grid-cols-2">
+                {branches.map((branch) => (
+                  <BranchCard branch={{ ...branch, createdAt: branch.updatedAt }} key={branch.id} />
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-gold/15 bg-[#06111f] p-8 text-center">
+                <p className="text-sm font-bold uppercase tracking-[0.24em] text-gold">Branch setup</p>
+                <p className="mt-3 text-lg font-black text-white">Robot Cafe branches are being prepared.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
 
       <section className="mx-auto w-full max-w-7xl px-5 pb-5 pt-2 sm:px-8">
         <div className="luxury-panel p-5 sm:p-7">

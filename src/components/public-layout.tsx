@@ -10,10 +10,20 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
             <BrandMark imageClassName="w-[150px] sm:w-[188px]" />
           </Link>
           <nav className="scrollbar-none flex min-w-0 flex-1 items-center justify-end gap-2 overflow-x-auto text-sm font-extrabold text-white sm:gap-3">
-            <Link className="shrink-0 rounded-full px-4 py-2 transition hover:bg-white/10" href="/menu">Menu</Link>
-            <Link className="shrink-0 rounded-full px-4 py-2 transition hover:bg-white/10" href="/menu#branches">Branches</Link>
-            <Link className="shrink-0 rounded-full px-4 py-2 transition hover:bg-white/10" href="/reservations">Reservations</Link>
+            <Link className="shrink-0 rounded-full px-4 py-2 transition hover:bg-white/10" href="/#branches">Branches</Link>
+            <Link className="shrink-0 rounded-full px-4 py-2 transition hover:bg-white/10" href="/reservations">Reserve</Link>
             <Link className="shrink-0 rounded-full px-4 py-2 transition hover:bg-white/10" href="/feedback">Feedback</Link>
+            <Link
+              aria-label="Admin login"
+              className="grid size-11 shrink-0 place-items-center rounded-full border border-gold/30 bg-white/5 text-gold shadow-[0_14px_34px_rgba(0,0,0,.24)] transition hover:border-gold hover:bg-gold/12"
+              href="/admin/login"
+              title="Admin login"
+            >
+              <svg aria-hidden="true" className="size-5" fill="none" viewBox="0 0 24 24">
+                <circle cx="12" cy="8" r="3.4" stroke="currentColor" strokeWidth="2" />
+                <path d="M5.5 20c1.2-3.6 3.3-5.4 6.5-5.4s5.3 1.8 6.5 5.4" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
+              </svg>
+            </Link>
           </nav>
         </div>
       </header>
