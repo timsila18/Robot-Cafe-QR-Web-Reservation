@@ -160,64 +160,81 @@ export function AdminMenuManager({ initialItems, categories, branches }: AdminMe
 
     const isNew = !item.id;
     const payload = { ...item, id: undefined };
-    const response = await fetch(isNew ? "/api/admin/menu-items" : `/api/admin/menu-items/${item.id}`, {
-      method: isNew ? "POST" : "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const result = await response.json();
+    try {
+      const response = await fetch(isNew ? "/api/admin/menu-items" : `/api/admin/menu-items/${item.id}`, {
+        method: isNew ? "POST" : "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json();
 
-    if (!response.ok) {
-      if (canUseDemoPersistence(result.error)) {
-        return saveDemoItem(item, `${isNew ? "Created" : "Saved"} locally for this Vercel demo.`);
+      if (!response.ok) {
+        if (canUseDemoPersistence(result.error)) {
+          return saveDemoItem(item, `${isNew ? "Created" : "Saved"} locally for this local demo.`);
+        }
+        notify(result.error ?? "Unable to save item.");
+        return { ok: false, message: result.error ?? "Unable to save item." };
       }
-      notify(result.error ?? "Unable to save item.");
-      return { ok: false, message: result.error ?? "Unable to save item." };
-    }
 
-    persistItems(isNew ? [result.data, ...items] : items.map((entry) => (entry.id === item.id ? result.data : entry)));
-    setEditing(null);
-    notify(isNew ? "Menu item created." : "Menu item updated.");
-    return { ok: true };
+      persistItems(isNew ? [result.data, ...items] : items.map((entry) => (entry.id === item.id ? result.data : entry)));
+      setEditing(null);
+      notify(isNew ? "Menu item created." : "Menu item updated.");
+      return { ok: true };
+    } catch (error) {
+      if (canUseDemoPersistence(error)) {
+        return saveDemoItem(item, `${isNew ? "Created" : "Saved"} locally for this local demo.`);
+      }
+      const message = "Unable to save item. Please check your connection and try again.";
+      notify(message);
+      return { ok: false, message };
+    }
   };
 
   const removeItem = async (itemId: string) => {
     if (!window.confirm("Delete this menu item? This requires confirmation.")) return;
-    const response = await fetch(`/api/admin/menu-items/${itemId}`, { method: "DELETE" });
-    const result = await response.json();
-    if (!response.ok) {
-      if (canUseDemoPersistence(result.error)) {
-        persistItems(items.filter((item) => item.id !== itemId));
-        notify("Menu item deleted locally for this Vercel demo.");
+    try {
+      const response = await fetch(`/api/admin/menu-items/${itemId}`, { method: "DELETE" });
+      const result = await response.json();
+      if (!response.ok) {
+        if (canUseDemoPersistence(result.error)) {
+          persistItems(items.filter((item) => item.id !== itemId));
+          notify("Menu item deleted locally for this local demo.");
+          return;
+        }
+        notify(result.error ?? "Unable to delete menu item.");
         return;
       }
-      notify(result.error ?? "Unable to delete menu item.");
-      return;
+      persistItems(items.filter((item) => item.id !== itemId));
+      notify("Menu item deleted.");
+    } catch {
+      notify("Unable to delete menu item. Please check your connection and try again.");
     }
-    persistItems(items.filter((item) => item.id !== itemId));
-    notify("Menu item deleted.");
   };
 
   const patchItem = async (itemId: string, patch: Partial<AdminMenuItem>, message: string) => {
     const currentItem = items.find((item) => item.id === itemId);
     if (!currentItem) return;
     const nextItem = { ...currentItem, ...patch, updatedAt: new Date().toISOString() };
-    const response = await fetch(`/api/admin/menu-items/${itemId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...nextItem, id: undefined }),
-    });
-    const result = await response.json();
-    if (!response.ok) {
-      if (canUseDemoPersistence(result.error)) {
-        saveDemoItem(nextItem, message);
+    try {
+      const response = await fetch(`/api/admin/menu-items/${itemId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...nextItem, id: undefined }),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        if (canUseDemoPersistence(result.error)) {
+          saveDemoItem(nextItem, message);
+          return;
+        }
+        notify(result.error ?? "Unable to update item.");
         return;
       }
-      notify(result.error ?? "Unable to update item.");
-      return;
+      persistItems(items.map((item) => (item.id === itemId ? result.data : item)));
+      notify(message);
+    } catch {
+      notify("Unable to update item. Please check your connection and try again.");
     }
-    persistItems(items.map((item) => (item.id === itemId ? result.data : item)));
-    notify(message);
   };
 
   const duplicate = async (item: AdminMenuItem) => {

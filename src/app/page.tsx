@@ -37,8 +37,8 @@ export default async function Home() {
         description="A polished QR-powered dining platform built for fast branch menus, modern service workflows, and future-ready hospitality operations."
         primaryHref="/menu"
         primaryLabel="Open Digital Menu"
-        secondaryHref="/admin"
-        secondaryLabel="View Admin"
+        secondaryHref="/reservations"
+        secondaryLabel="Reserve Table"
         featuredItems={heroItems}
       />
 

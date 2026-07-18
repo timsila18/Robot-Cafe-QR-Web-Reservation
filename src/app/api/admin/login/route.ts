@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { fail, ok } from "@/lib/api-response";
 import { logActivity } from "@/lib/admin-store";
+import { adminSessionMaxAge, createAdminSessionToken } from "@/lib/admin-auth-token";
 import { ADMIN_COOKIE, ADMIN_EMAIL_COOKIE } from "@/lib/admin-session";
 import { listAdminUsers } from "@/lib/rbac";
 import { adminLoginSchema } from "@/lib/validation";
@@ -30,20 +31,14 @@ export async function POST(request: Request) {
     const redirectTo = adminUser?.role === "hostess" ? "/admin/reservations" : "/admin";
 
     const cookieStore = await cookies();
-    cookieStore.set(ADMIN_COOKIE, "active", {
+    cookieStore.set(ADMIN_COOKIE, await createAdminSessionToken(matchedCredential.email), {
       httpOnly: true,
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
-      maxAge: 60 * 60 * 8,
+      maxAge: adminSessionMaxAge,
       path: "/",
     });
-    cookieStore.set(ADMIN_EMAIL_COOKIE, matchedCredential.email.toLowerCase(), {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 60 * 60 * 8,
-      path: "/",
-    });
+    cookieStore.delete(ADMIN_EMAIL_COOKIE);
     await logActivity("Admin Login", "admin_users", "local-admin");
     return ok({ redirectTo });
   } catch (error) {

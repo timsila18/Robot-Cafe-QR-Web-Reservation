@@ -75,8 +75,12 @@ export function AdminBranchManager({ initialBranches }: { initialBranches: Admin
       persistBranches(nextBranches);
       setEditing(null);
       notify(isNew ? "Branch created." : "Branch updated.");
-    } catch {
-      saveDemoBranch(branch, `${isNew ? "Created" : "Saved"} locally because the server is unavailable.`);
+    } catch (error) {
+      if (canUseDemoPersistence(error)) {
+        saveDemoBranch(branch, `${isNew ? "Created" : "Saved"} locally for this local demo.`);
+        return;
+      }
+      notify(`Unable to ${isNew ? "create" : "update"} branch. Please check your connection and try again.`);
     } finally {
       setIsSaving(false);
     }

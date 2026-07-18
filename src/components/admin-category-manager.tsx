@@ -111,25 +111,33 @@ export function AdminCategoryManager({
 
   const save = async (category: AdminCategory) => {
     const isNew = !category.id;
-    const response = await fetch(isNew ? "/api/admin/categories" : `/api/admin/categories/${category.id}`, {
-      method: isNew ? "POST" : "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...category, id: undefined }),
-    });
-    const payload = await response.json();
+    try {
+      const response = await fetch(isNew ? "/api/admin/categories" : `/api/admin/categories/${category.id}`, {
+        method: isNew ? "POST" : "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...category, id: undefined }),
+      });
+      const payload = await response.json();
 
-    if (!response.ok) {
-      if (canUseDemoPersistence(payload.error)) {
-        saveDemoCategory(category, `${isNew ? "Created" : "Saved"} locally for this Vercel demo.`);
+      if (!response.ok) {
+        if (canUseDemoPersistence(payload.error)) {
+          saveDemoCategory(category, `${isNew ? "Created" : "Saved"} locally for this local demo.`);
+          return;
+        }
+        notify(payload.error ?? "Unable to save category.");
         return;
       }
-      notify(payload.error ?? "Unable to save category.");
-      return;
-    }
 
-    persistCategories(isNew ? [payload.data, ...categories] : categories.map((item) => (item.id === category.id ? payload.data : item)));
-    closeEditor();
-    notify(isNew ? "Category created." : "Category updated.");
+      persistCategories(isNew ? [payload.data, ...categories] : categories.map((item) => (item.id === category.id ? payload.data : item)));
+      closeEditor();
+      notify(isNew ? "Category created." : "Category updated.");
+    } catch (error) {
+      if (canUseDemoPersistence(error)) {
+        saveDemoCategory(category, `${isNew ? "Created" : "Saved"} locally for this local demo.`);
+        return;
+      }
+      notify("Unable to save category. Please check your connection and try again.");
+    }
   };
 
   const remove = async (category: AdminCategory) => {
@@ -139,19 +147,23 @@ export function AdminCategoryManager({
       return;
     }
     if (!window.confirm("Delete this category?")) return;
-    const response = await fetch(`/api/admin/categories/${category.id}`, { method: "DELETE" });
-    const payload = await response.json();
-    if (!response.ok) {
-      if (canUseDemoPersistence(payload.error)) {
-        persistCategories(categories.filter((item) => item.id !== category.id));
-        notify("Category deleted locally for this Vercel demo.");
+    try {
+      const response = await fetch(`/api/admin/categories/${category.id}`, { method: "DELETE" });
+      const payload = await response.json();
+      if (!response.ok) {
+        if (canUseDemoPersistence(payload.error)) {
+          persistCategories(categories.filter((item) => item.id !== category.id));
+          notify("Category deleted locally for this local demo.");
+          return;
+        }
+        notify(payload.error ?? "Unable to delete category.");
         return;
       }
-      notify(payload.error ?? "Unable to delete category.");
-      return;
+      persistCategories(categories.filter((item) => item.id !== category.id));
+      notify("Category deleted.");
+    } catch {
+      notify("Unable to delete category. Please check your connection and try again.");
     }
-    persistCategories(categories.filter((item) => item.id !== category.id));
-    notify("Category deleted.");
   };
 
   return (

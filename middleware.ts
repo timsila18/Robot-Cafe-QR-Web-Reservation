@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { verifyAdminSessionToken } from "@/lib/admin-auth-token";
 
 const ADMIN_COOKIE = "robot_admin_session";
-const ADMIN_EMAIL_COOKIE = "robot_admin_email";
 const hostessEmails = new Set(["lana@robotcafe.co.ke", "imaara@robotcafe.co.ke"]);
 
 const routeAccessByEmail: Record<string, string[]> = {
@@ -32,7 +32,7 @@ function hasRouteAccess(email: string, pathname: string) {
   return allowedPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
 }
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-pathname", pathname);
@@ -45,9 +45,9 @@ export function middleware(request: NextRequest) {
     });
   }
 
-  const isAuthenticated = request.cookies.get(ADMIN_COOKIE)?.value === "active";
-  const adminEmail = request.cookies.get(ADMIN_EMAIL_COOKIE)?.value ?? "";
-  const isHostess = hostessEmails.has(adminEmail);
+  const adminEmail = await verifyAdminSessionToken(request.cookies.get(ADMIN_COOKIE)?.value);
+  const isAuthenticated = Boolean(adminEmail);
+  const isHostess = adminEmail ? hostessEmails.has(adminEmail) : false;
 
   if (!isAuthenticated) {
     if (pathname.startsWith("/api/admin")) {
@@ -59,7 +59,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  if (isHostess && pathname.startsWith("/admin") && pathname !== "/admin/reservations" && !pathname.startsWith("/api/admin/reservations") && pathname !== "/api/admin/logout") {
+  if (adminEmail && isHostess && pathname.startsWith("/admin") && pathname !== "/admin/reservations" && !pathname.startsWith("/api/admin/reservations") && pathname !== "/api/admin/logout") {
     if (pathname.startsWith("/api/admin")) {
       return NextResponse.json({ ok: false, error: "Hostess access is limited to reservations." }, { status: 403 });
     }

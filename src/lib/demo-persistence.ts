@@ -6,7 +6,9 @@ export const demoCategoryStorageKey = "robot-cafe-admin-categories";
 export const demoMenuStorageKey = "robot-cafe-admin-menu-items";
 
 function isDemoPersistenceEnabled() {
-  return process.env.NEXT_PUBLIC_ENABLE_DEMO_PERSISTENCE === "true";
+  if (process.env.NEXT_PUBLIC_ENABLE_DEMO_PERSISTENCE !== "true") return false;
+  if (typeof window === "undefined") return false;
+  return ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
 }
 
 export function canUseDemoPersistence(error: unknown) {

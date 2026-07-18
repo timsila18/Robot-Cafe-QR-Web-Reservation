@@ -28,8 +28,6 @@ export function LoginForm() {
       return;
     }
 
-    const secure = window.location.protocol === "https:" ? "; secure" : "";
-    document.cookie = `robot_admin_session=active; path=/; max-age=${60 * 60 * 8}; samesite=lax${secure}`;
     window.location.assign(searchParams.get("next") ?? payload.data.redirectTo ?? "/admin");
   };
 
