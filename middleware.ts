@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { verifyAdminSessionToken } from "@/lib/admin-auth-token";
+import { verifyAdminSession } from "@/lib/admin-auth-token";
 
 const ADMIN_COOKIE = "robot_admin_session";
 const hostessEmails = new Set(["lana@robotcafe.co.ke", "imaara@robotcafe.co.ke"]);
@@ -26,9 +26,30 @@ const routeAccessByEmail: Record<string, string[]> = {
   "imaara@robotcafe.co.ke": ["/admin/reservations", "/api/admin/reservations", "/api/admin/logout"],
 };
 
-function hasRouteAccess(email: string, pathname: string) {
-  const allowedPrefixes = routeAccessByEmail[email];
-  if (!allowedPrefixes) return true;
+const routeAccessByRole: Record<string, string[]> = {
+  super_admin: ["/admin", "/api/admin"],
+  general_manager: ["/admin", "/api/admin"],
+  branch_manager: [
+    "/admin",
+    "/admin/menu",
+    "/admin/qr-codes",
+    "/admin/analytics",
+    "/admin/feedback",
+    "/admin/reservations",
+    "/api/admin/menu-items",
+    "/api/admin/images",
+    "/api/admin/reservations",
+    "/api/admin/feedback",
+    "/api/admin/dashboard",
+    "/api/admin/logout",
+  ],
+  content_manager: ["/admin/menu", "/admin/categories", "/api/admin/menu-items", "/api/admin/categories", "/api/admin/images", "/api/admin/logout"],
+  hostess: ["/admin/reservations", "/api/admin/reservations", "/api/admin/logout"],
+};
+
+function hasRouteAccess(email: string, role: string | undefined, pathname: string) {
+  const allowedPrefixes = routeAccessByEmail[email] ?? (role ? routeAccessByRole[role] : undefined);
+  if (!allowedPrefixes) return false;
   return allowedPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
 }
 
@@ -45,7 +66,8 @@ export async function middleware(request: NextRequest) {
     });
   }
 
-  const adminEmail = await verifyAdminSessionToken(request.cookies.get(ADMIN_COOKIE)?.value);
+  const adminSession = await verifyAdminSession(request.cookies.get(ADMIN_COOKIE)?.value);
+  const adminEmail = adminSession?.email;
   const isAuthenticated = Boolean(adminEmail);
   const isHostess = adminEmail ? hostessEmails.has(adminEmail) : false;
 
@@ -68,7 +90,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(reservationsUrl);
   }
 
-  if (adminEmail && !hasRouteAccess(adminEmail, pathname)) {
+  if (adminEmail && !hasRouteAccess(adminEmail, adminSession?.role, pathname)) {
     if (pathname.startsWith("/api/admin")) {
       return NextResponse.json({ ok: false, error: "You do not have access to this admin action." }, { status: 403 });
     }

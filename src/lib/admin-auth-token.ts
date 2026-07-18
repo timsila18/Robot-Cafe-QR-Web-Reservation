@@ -2,6 +2,11 @@ const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 const sessionDurationSeconds = 60 * 60 * 8;
 
+export type AdminSessionClaims = {
+  email: string;
+  role?: string;
+};
+
 function baseSecret() {
   return process.env.ADMIN_SESSION_SECRET || process.env.ROBOT_ADMIN_PASSWORD || "robot-cafe-change-this-session-secret";
 }
@@ -49,16 +54,16 @@ function safeEqual(left: string, right: string) {
   return diff === 0;
 }
 
-export async function createAdminSessionToken(email: string) {
-  const normalizedEmail = email.toLowerCase();
-  const encodedEmail = toBase64Url(normalizedEmail);
+export async function createAdminSessionToken(email: string, role?: string) {
+  const claims: AdminSessionClaims = { email: email.toLowerCase(), role };
+  const encodedEmail = toBase64Url(JSON.stringify(claims));
   const expiresAt = Math.floor(Date.now() / 1000) + sessionDurationSeconds;
   const payload = `${encodedEmail}.${expiresAt}`;
   const signature = await signPayload(payload);
   return `${payload}.${signature}`;
 }
 
-export async function verifyAdminSessionToken(token?: string) {
+export async function verifyAdminSession(token?: string): Promise<AdminSessionClaims | null> {
   if (!token) return null;
   const parts = token.split(".");
   if (parts.length !== 3) return null;
@@ -73,10 +78,19 @@ export async function verifyAdminSessionToken(token?: string) {
   if (!safeEqual(signature, expectedSignature)) return null;
 
   try {
-    return fromBase64Url(encodedEmail);
+    const decoded = fromBase64Url(encodedEmail);
+    if (decoded.trim().startsWith("{")) {
+      const claims = JSON.parse(decoded) as AdminSessionClaims;
+      return claims.email ? { ...claims, email: claims.email.toLowerCase() } : null;
+    }
+    return { email: decoded.toLowerCase() };
   } catch {
     return null;
   }
+}
+
+export async function verifyAdminSessionToken(token?: string) {
+  return (await verifyAdminSession(token))?.email ?? null;
 }
 
 export const adminSessionMaxAge = sessionDurationSeconds;

@@ -92,7 +92,7 @@ export const rolePermissions: Record<AdminRole, Permission[]> = {
 const now = () => new Date().toISOString();
 const id = (prefix: string) => `${prefix}-${crypto.randomUUID()}`;
 
-let adminUsers: AdminUser[] = [
+export const defaultAdminUsers: AdminUser[] = [
   {
     id: "user-super-admin",
     name: "Robot Cafe Super Admin",
@@ -147,6 +147,8 @@ let adminUsers: AdminUser[] = [
     createdAt: "2026-06-20T08:00:00.000Z",
   },
 ];
+
+let adminUsers: AdminUser[] = [...defaultAdminUsers];
 
 let auditLogs: AuditLog[] = [
   {
