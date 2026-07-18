@@ -7,11 +7,11 @@ import { hasPermission } from "@/lib/rbac";
 export async function AdminSidebar() {
   const currentUser = await getSessionAdminUser();
   return (
-    <aside className="hidden h-screen w-72 shrink-0 overflow-y-auto border-r border-white/10 bg-[#071827]/95 p-5 text-white shadow-2xl lg:sticky lg:top-0 lg:block">
-      <div className="rounded-2xl border border-white/10 bg-black/18 p-2 shadow-[0_20px_60px_rgba(0,0,0,.22)]">
+    <aside className="hidden w-72 shrink-0 border-r border-white/10 bg-[#071827]/95 text-white shadow-2xl lg:flex lg:h-screen lg:min-h-0 lg:flex-col lg:overflow-hidden">
+      <div className="m-5 mb-0 rounded-2xl border border-white/10 bg-black/18 p-2 shadow-[0_20px_60px_rgba(0,0,0,.22)]">
         <BrandMark imageClassName="w-full" />
       </div>
-      <nav className="mt-8 space-y-2 pb-4">
+      <nav className="mt-6 min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain px-5 pb-4 pr-3 [scrollbar-gutter:stable]">
         {adminNavItems.filter(([, , permission]) => !permission || hasPermission(currentUser.role, permission)).map(([label, href]) => (
           <Link
             className="block rounded-xl border border-transparent px-4 py-3 text-sm font-extrabold tracking-wide text-white/70 transition hover:border-[#168df2]/45 hover:bg-[#168df2]/14 hover:text-white"
@@ -22,7 +22,7 @@ export async function AdminSidebar() {
           </Link>
         ))}
       </nav>
-      <div className="mb-4 mt-8 rounded-2xl border border-white/10 bg-white/8 p-4">
+      <div className="m-5 mt-4 rounded-2xl border border-white/10 bg-white/8 p-4">
         <p className="text-xs uppercase tracking-[0.24em] text-[#d8a928]">Prepared Modules</p>
         <p className="mt-3 text-sm leading-6 text-white/66">
           {currentUser.role === "hostess" ? `${currentUser.name} reservation execution console.` : "Ordering, checkout, M-Pesa, loyalty, reservations, table service, and KDS."}
